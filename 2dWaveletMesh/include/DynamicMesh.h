@@ -7,6 +7,10 @@
 struct priv_MeshHandle{
 	IndexHandle_t Indexer;
 	DataHandle_t  DataField;
+	uint64_t ZeroLevel;
+	uint16_t N1Level	;
+	uint8_t  N2Level : 4;
+	uint8_t  N3Level : 1;
 	double threshold;
 };
 
@@ -15,7 +19,7 @@ typedef struct priv_MeshHandle* MeshHandle_t;
 
 // private functions 
 
-static void MarchingCrossTypeZero(MeshHandle_t handle);
+void MarchingCrossTypeZero(MeshHandle_t handle);
 
 static void MarchingCrossTypeN(MeshHandle_t handle, int N);
 
@@ -44,3 +48,9 @@ void SetMeshThreshold(double p_threshold, MeshHandle_t handle);
 void getMeshThreshold(double* p_threshold, MeshHandle_t handle);
 
 bool GetDataByCoordinate(int x, int y, IndexHandle_t handle, DataHandle_t* data);
+
+bool ZeroLevelIsEmpty(int x, int y, MeshHandle_t handle);
+
+bool N1LevelIsEmpty(int x, int y, MeshHandle_t handle);
+
+bool N2LevelIsEmpty(int x, int y, MeshHandle_t handle);

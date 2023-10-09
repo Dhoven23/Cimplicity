@@ -6,7 +6,34 @@
 
 // -------- TODO : IMPLEMENT
 
-// static void MarchingCrossTypeZero(MeshHandle_t handle);
+void MarchingCrossTypeZero(MeshHandle_t handle){
+
+    /* ---------------------------------
+        This is the initial marching cross
+        algorithm. It requires the Indexer
+        field of the mesh to be coalesced
+    */
+
+    // get Threshold
+    double threshold = handle->threshold;
+
+    // get data 
+    double data[17*17];
+    int count = 0;
+
+    while(count < (17*17)){
+        DataHandle_t data_temp;
+        data_temp = (DataHandle_t)(handle->Indexer[count].data_ptr);
+        data[count] = data_temp->data;
+        
+        printf("Index[%i] = %f\n",count, data[count]);
+        count++;
+    }
+    // get ring scalars
+    // get points
+    // compute cross
+    // evaluate marching cross for case
+}
 
 // static void MarchingCrossTypeN(MeshHandle_t handle, int N);
 
@@ -28,6 +55,19 @@ bool GenerateMesh(MeshHandle_t handle){
     if (Indexer_Create(&(handle->Indexer),LENGTH) && InitData(&(handle->DataField),LENGTH)){
         PopulateData(handle->DataField,LENGTH);
         SmoothData2D(handle->DataField,LENGTH,350);
+
+        // set bitfields
+        handle->ZeroLevel = UINT64_MAX;
+        handle->N1Level    = UINT16_MAX;
+        handle->N2Level   = 15u;
+        handle->N3Level   = 1u;
+
+        for (int i = 0; i < LENGTH; ++i)
+        {
+            handle->Indexer[i].data_ptr = (void*)(&(handle->DataField[i]));
+            DataHandle_t p_data;
+        }
+
         return true;
     } else {
         return false;
@@ -62,6 +102,33 @@ bool GetScalarByCoordinate(int x, int y, MeshHandle_t handle, double* data){
     if (b_IsValidData && b_IsValidPointer){
         *data = data_out;
         return true;
+    }
+    return false;
+}
+
+bool ZeroLevelIsEmpty(int x, int y, MeshHandle_t handle){
+    int ind = x + (y*8);
+    if (ind < 64){
+        uint64_t mask = (uint64_t)(1ull << ind);
+        return ((handle->ZeroLevel & mask) == mask);
+    }
+    return false;
+}
+
+bool N1LevelIsEmpty(int x, int y, MeshHandle_t handle){
+    int ind = x + (y*4);
+    if (ind < 16){
+        uint16_t mask = (uint16_t)(1 << ind);
+        return ((handle->N1Level & mask) == mask);
+    }
+    return false;
+}
+
+bool N2LevelIsEmpty(int x, int y, MeshHandle_t handle){
+    int ind = x + (y*2);
+    if (ind < 4){
+        uint8_t mask = (uint8_t)(1 << ind);
+        return ((handle->N2Level & mask) == mask);
     }
     return false;
 }

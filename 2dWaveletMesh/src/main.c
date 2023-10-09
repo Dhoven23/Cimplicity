@@ -16,8 +16,9 @@ int main()
     	// Put your program Here ...
     	
     	SetMeshThreshold(0.1f,Mesh);
+        DeleteGridNodes2D(Mesh);
+    	//MarchingCrossTypeZero(Mesh);
 
-    	DeleteGridNodes2D(Mesh);
 
     	// End your program Here ...
     	DestroyMesh(Mesh);
