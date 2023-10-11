@@ -54,3 +54,13 @@ bool ZeroLevelIsEmpty(int x, int y, MeshHandle_t handle);
 bool N1LevelIsEmpty(int x, int y, MeshHandle_t handle);
 
 bool N2LevelIsEmpty(int x, int y, MeshHandle_t handle);
+
+void KeepZoneZeroLevel(int x, int y, MeshHandle_t handle);
+
+void DeleteZoneZeroLevel(int x, int y, MeshHandle_t handle);
+
+void KeepZoneN1Level(int x, int y, MeshHandle_t handle);
+
+void DeleteZoneN1Level(int x, int y, MeshHandle_t handle);
+
+bool ZeroLevelCrossIsEmpty(int x, int y, MeshHandle_t handle);

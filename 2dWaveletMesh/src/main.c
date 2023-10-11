@@ -16,8 +16,26 @@ int main()
     	// Put your program Here ...
     	
     	SetMeshThreshold(0.1f,Mesh);
-        DeleteGridNodes2D(Mesh);
-    	//MarchingCrossTypeZero(Mesh);
+        //DeleteGridNodes2D(Mesh);
+    	MarchingCrossTypeZero(Mesh);
+        printf("\n\n\n");
+
+        //DeleteZoneZeroLevel(5,5,Mesh);
+
+        for (int i = 0; i < 8; ++i){
+            for (int j = 0; j < 8; ++j){
+                printf(" %i ",(int)ZeroLevelIsEmpty(j,i,Mesh));
+            }
+            printf("\n");
+        }
+        printf("\n\n");
+        for (int i = 0; i < 8; ++i){
+            for (int j = 0; j < 8; ++j){
+                printf(" %i ",(int)ZeroLevelCrossIsEmpty(j,i,Mesh));
+                
+            }
+            printf("\n");
+        }
 
 
     	// End your program Here ...

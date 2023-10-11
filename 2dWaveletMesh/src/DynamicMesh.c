@@ -18,21 +18,261 @@ void MarchingCrossTypeZero(MeshHandle_t handle){
     double threshold = handle->threshold;
 
     // get data 
-    double data[17*17];
+    double data_arr[17*17];
     int count = 0;
 
     while(count < (17*17)){
         DataHandle_t data_temp;
         data_temp = (DataHandle_t)(handle->Indexer[count].data_ptr);
-        data[count] = data_temp->data;
+        data_arr[count] = data_temp->data;
         
-        printf("Index[%i] = %f\n",count, data[count]);
+        //printf("Index[%i] = %f\n",count, data[count]);
         count++;
     }
-    // get ring scalars
-    // get points
-    // compute cross
-    // evaluate marching cross for case
+
+    char* buff;
+    buff = malloc(LENGTH* (sizeof *buff));
+    double deltaSum = 0;
+
+    for (int i = 0; i < 8; ++i){
+        for (int j = 0; j < 8; ++j){
+             // center point
+            int X0 = 1 + (j * 2);
+            int Y0 = 1 + (i * 2);
+
+            // ------- lookup ring scalars ---------
+
+            double r[5];
+            r[0] = data_arr[GetIndex(X0+1,Y0-1)]; // check if r0 is in bounds
+            r[1] = data_arr[GetIndex(X0-1,Y0-1)];
+            r[2] = data_arr[GetIndex(X0-1,Y0+1)];
+            r[3] = data_arr[GetIndex(X0+1,Y0+1)];
+            
+
+            // ------- lookup pivot scalars ________
+            double p[4];
+            p[0] = data_arr[GetIndex(X0  ,Y0+1)];
+            p[1] = data_arr[GetIndex(X0-1,Y0  )];
+            p[2] = data_arr[GetIndex(X0  ,Y0-1)];
+            p[3] = data_arr[GetIndex(X0+1,Y0  )];
+
+            // compute cross
+
+            // calculate marching cross configuration. 
+            int Xcheck = j;
+            int Yckeck = i;
+
+            int cross = ((Xcheck == 0) && (Yckeck == 0)) ? 0 : 0;
+                cross = ((Xcheck == 0) && (Yckeck != 0)) ? 1 : cross;
+                cross = ((Xcheck != 0) && (Yckeck == 0)) ? 2 : cross;
+                cross = ((Xcheck != 0) && (Yckeck != 0)) ? 3 : cross;
+            
+
+
+            // evaluate marching cross for case
+            // Printing buffer
+
+        
+            switch (cross)
+            {
+                case 0: // compute marching cross for case 0
+                    
+                    // ------- calculate pivot deltas _______
+                    
+                    for (int i = 0; i < 4; ++i)
+                    {
+                        int r1 = i;
+                        int r2 = (i+1) % 4;
+
+                        deltaSum += fabs((((r[r2] - r[r1]) / 2) + r[r1]) - p[i]);
+                    }
+
+                    if (deltaSum > threshold){
+
+                        buff[X0-1     ]  = '*';
+                        buff[X0       ]  = '*';
+                        buff[X0+1     ]  = '*';
+                        buff[X0-1 + 17]  = '*';
+                        buff[X0   + 17]  = '*';
+                        buff[X0+1 + 17]  = '*';
+                        buff[X0-1 + 34]  = '*';
+                        buff[X0   + 34]  = '*';
+                        buff[X0+1 + 34]  = '*';
+                        KeepZoneZeroLevel(j,i,handle);
+
+                    } else {
+
+                        buff[X0-1     ]  = '*';
+                        buff[X0       ]  = ' ';
+                        buff[X0+1     ]  = '*';
+                        buff[X0-1 + 17]  = ' ';
+                        buff[X0   + 17]  = '*';
+                        buff[X0+1 + 17]  = ' ';
+                        buff[X0-1 + 34]  = '*';
+                        buff[X0   + 34]  = ' ';
+                        buff[X0+1 + 34]  = '*';
+                        DeleteZoneZeroLevel(j,i,handle);
+                    }
+                    printf(" %.2f ",deltaSum);
+                    
+                    break;
+
+                case 1: // compute marching cross for case 1
+
+
+                    // ------- calculate pivot deltas _______
+                    
+                    deltaSum  = fabs((((r[1] - r[0]) / 2) + r[0]) - p[0]);
+                    deltaSum += fabs((((r[3] - r[2]) / 2) + r[2]) - p[2]);
+                    deltaSum += fabs((((r[0] - r[3]) / 2) + r[3]) - p[3]);
+
+                    if (deltaSum > threshold){
+
+                        buff[X0-1 + 17*2*i + 17]  = '*';
+                        buff[X0   + 17*2*i + 17]  = '*';
+                        buff[X0+1 + 17*2*i + 17]  = '*';
+                        buff[X0-1 + 17*2*i + 34]  = '*';
+                        buff[X0   + 17*2*i + 34]  = '*';
+                        buff[X0+1 + 17*2*i + 34]  = '*';
+                        KeepZoneZeroLevel(j,i,handle);
+
+
+                    } else {
+
+                        buff[X0-1 + 17*2*i + 17]  = ' ';
+                        buff[X0   + 17*2*i + 17]  = '*';
+                        buff[X0+1 + 17*2*i + 17]  = ' ';
+                        buff[X0-1 + 17*2*i + 34]  = '*';
+                        buff[X0   + 17*2*i + 34]  = ' ';
+                        buff[X0+1 + 17*2*i + 34]  = '*';
+                        DeleteZoneZeroLevel(j,i,handle);
+
+                    }
+                    printf(" %.2f ",deltaSum);
+                    
+                    
+                    
+                    break;
+
+                case 2: // compute marching cross for case 2
+
+                    // ------- calculate pivot deltas _______
+                    
+                    deltaSum  = fabs((((r[2] - r[1]) / 2) + r[1]) - p[1]);
+                    deltaSum += fabs((((r[3] - r[2]) / 2) + r[2]) - p[2]);
+                    deltaSum += fabs((((r[0] - r[3]) / 2) + r[3]) - p[3]);
+
+
+                    if (deltaSum > threshold){
+
+
+                        buff[X0       ]  = '*';
+                        buff[X0+1     ]  = '*';
+                        buff[X0   + 17]  = '*';
+                        buff[X0+1 + 17]  = '*';
+                        buff[X0   + 34]  = '*';
+                        buff[X0+1 + 34]  = '*';
+                        KeepZoneZeroLevel(j,i,handle);
+
+
+                    } else {
+
+
+                        buff[X0       ]  = ' ';
+                        buff[X0+1     ]  = '*';
+                        buff[X0   + 17]  = '*';
+                        buff[X0+1 + 17]  = ' ';
+                        buff[X0   + 34]  = ' ';
+                        buff[X0+1 + 34]  = '*';
+                        DeleteZoneZeroLevel(j,i,handle);
+                    }
+                    printf(" %.2f ",deltaSum);
+
+                    break;
+
+                case 3: // compute marching cross for case 3
+
+                    // ------- calculate pivot deltas _______
+
+                    deltaSum  = fabs((((r[3] - r[2]) / 2) + r[2]) - p[2]);
+                    deltaSum += fabs((((r[0] - r[3]) / 2) + r[3]) - p[3]);
+
+                    if (deltaSum > threshold){
+
+
+                        buff[X0   + 17*i*2]  = '*';
+                        buff[X0   + 17+ 17*i*2]  = '*';
+                        buff[X0+1 + 17+ 17*i*2]  = '*';
+                        buff[X0   + 34+ 17*i*2]  = '*';
+                        buff[X0+1 + 34+ 17*i*2]  = '*';
+                        buff[X0-1 + 17+ 17*i*2]  = '*';
+                        KeepZoneZeroLevel(j,i,handle);
+
+
+                    } else {
+
+                        buff[X0   + 17+ 17*i*2]  = '*';
+                        buff[X0+1 + 17+ 17*i*2]  = ' ';
+                        buff[X0   + 34+ 17*i*2]  = ' ';
+                        buff[X0+1 + 34+ 17*i*2]  = '*';
+                        DeleteZoneZeroLevel(j,i,handle);
+
+                    }
+                    printf(" %.2f ",deltaSum);
+
+                    break;
+            }
+
+        } printf("\n");
+    }
+
+    double L1points[2];
+    L1points[0] = data_arr[0];
+    int c = -1;
+
+    for (int j = 0; j < 8; ++j){
+        for (int i = 0; i < 8; ++i) {
+            int X0 = (i * 2) + 1;
+            int Y0 = (j * 2) + 1;
+            
+            c *= -1;
+            int Y_step = Y0 + c;
+            int X_step = X0 + 1;
+
+
+            double center_point = data_arr[GetIndex(X0,Y0)];
+            double new_point = data_arr[GetIndex(X_step,Y_step)];
+
+            L1points[0] = L1points[1];
+            L1points[1] = new_point;
+
+            double delta = fabs((((L1points[1] - L1points[0]) / 2) + L1points[0]) - center_point);
+            if (delta > handle->threshold){
+                buff[GetIndex(X0,Y0)] = '*';
+                printf(" [%f] ",delta);
+            } else if (ZeroLevelCrossIsEmpty(i,j,handle)) {
+                buff[GetIndex(X0,Y0)] = ' ';
+                printf(" [%f] ",delta);
+            }
+        }
+        if (j % 2 == 0){
+            L1points[0] = data_arr[GetIndex(0,(j*2)+4)];
+            c = 1;
+        } else {
+            L1points[0] = data_arr[GetIndex(0,((j-1)*2)+4)];
+            c = -1;
+        }
+        printf("\n");
+    }
+    printf("\n");
+
+    for (int j = 0; j < 17; ++j){
+        for (int i = 0; i < 17; ++i){
+            printf("%c ",buff[i + j*17]);
+        }
+        printf("\n");
+    }
+    free(buff);
 }
 
 // static void MarchingCrossTypeN(MeshHandle_t handle, int N);
@@ -49,6 +289,39 @@ void MarchingCrossTypeZero(MeshHandle_t handle){
 // Public functions
 
 void AdaptMesh(MeshHandle_t handle);
+
+void KeepZoneZeroLevel(int x, int y, MeshHandle_t handle){
+    if ((x < 8) && (y < 8) && (x >= 0) && (y >= 0)){
+        int ind = x + 8*y;
+        handle->ZeroLevel |= ((uint64_t)1 << ind);
+    }
+}
+
+
+
+void DeleteZoneZeroLevel(int x, int y, MeshHandle_t handle){
+    if ((x < 8) && (y < 8) && (x >= 0) && (y >= 0)){
+        int ind = x + 8*y;
+        handle->ZeroLevel &= ~((uint64_t)1 << ind);
+    }
+}
+
+void KeepZoneN1Level(int x, int y, MeshHandle_t handle){
+    if ((x < 4) && (y < 4) && (x >= 0) && (y >= 0)){
+        int ind = x + 4*y;
+        handle->ZeroLevel |= ((uint16_t)1 << ind);
+    }
+}
+
+
+
+void DeleteZoneN1Level(int x, int y, MeshHandle_t handle){
+    if ((x < 8) && (y < 8) && (x >= 0) && (y >= 0)){
+        int ind = x + 8*y;
+        handle->ZeroLevel &= ~((uint16_t)1 << ind);
+    }
+}
+
 
 bool GenerateMesh(MeshHandle_t handle){
 
@@ -67,6 +340,8 @@ bool GenerateMesh(MeshHandle_t handle){
             handle->Indexer[i].data_ptr = (void*)(&(handle->DataField[i]));
             DataHandle_t p_data;
         }
+
+
 
         return true;
     } else {
@@ -131,6 +406,16 @@ bool N2LevelIsEmpty(int x, int y, MeshHandle_t handle){
         return ((handle->N2Level & mask) == mask);
     }
     return false;
+}
+
+bool ZeroLevelCrossIsEmpty(int x, int y, MeshHandle_t handle){
+    bool p_bool = false;
+    p_bool |= (x > 0) ? ZeroLevelIsEmpty(x-1,y,handle) : false;
+    p_bool |= (x < 7) ? ZeroLevelIsEmpty(x+1,y,handle) : false;
+    p_bool |= (y > 0) ? ZeroLevelIsEmpty(y-1,x,handle) : false;
+    p_bool |= (y < 7) ? ZeroLevelIsEmpty(y+1,x,handle) : false;
+
+    return !p_bool;
 }
 
 // Toy function for tweaking algo (does not modify mesh)
