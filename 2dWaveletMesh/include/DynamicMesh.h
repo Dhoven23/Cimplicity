@@ -21,7 +21,7 @@ typedef struct priv_MeshHandle* MeshHandle_t;
 
 void MarchingCrossTypeZero(MeshHandle_t handle);
 
-static void MarchingCrossTypeN(MeshHandle_t handle, int N);
+void MarchingCrossTypeN(MeshHandle_t handle, int N, char* buff);
 
 static void CompressMesh(MeshHandle_t handle);
 
@@ -64,3 +64,7 @@ void KeepZoneN1Level(int x, int y, MeshHandle_t handle);
 void DeleteZoneN1Level(int x, int y, MeshHandle_t handle);
 
 bool ZeroLevelCrossIsEmpty(int x, int y, MeshHandle_t handle);
+
+bool N1LevelCrossIsEmpty(int x, int y, MeshHandle_t handle);
+
+bool ZeroLevelSquareIsEmpty(int x, int y, MeshHandle_t handle);
