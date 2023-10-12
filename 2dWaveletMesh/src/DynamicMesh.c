@@ -275,15 +275,17 @@ void MarchingCrossTypeZero(MeshHandle_t handle){
     printf("\n");
 
     MarchingCrossTypeN(handle,1,buff);
-
+    double kept = 0, tossed = 0;
     for (int j = 0; j < 17; ++j){
         for (int i = 0; i < 17; ++i){
             printf("%c ",buff[i + j*17]);
+            kept += ((buff[GetIndex(i,j)] == '*')) ? 1 : 0;
+            tossed += ((buff[GetIndex(i,j)] == ' ')) ? 1 : 0;
         }
         printf("\n");
     }
 
-
+    printf("\n\nCompression ratio = %.2f%%\n",100.0f*(kept/((double)LENGTH)));
 
     free(buff);
 }
