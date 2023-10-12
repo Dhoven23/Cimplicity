@@ -134,6 +134,7 @@ void MarchingCrossTypeZero(MeshHandle_t handle){
                         buff[X0-1 + 17*2*i + 34]  = '*';
                         buff[X0   + 17*2*i + 34]  = '*';
                         buff[X0+1 + 17*2*i + 34]  = '*';
+                        buff[GetIndex(X0,Y0-1)] = '*';
                         KeepZoneZeroLevel(j,i,handle);
 
 
