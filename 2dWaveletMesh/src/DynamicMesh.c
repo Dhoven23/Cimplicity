@@ -172,6 +172,7 @@ void MarchingCrossTypeZero(MeshHandle_t handle){
                         buff[X0+1 + 17]  = '*';
                         buff[X0   + 34]  = '*';
                         buff[X0+1 + 34]  = '*';
+                        buff[GetIndex(X0-1,Y0)] = '*';
                         KeepZoneZeroLevel(j,i,handle);
 
 
@@ -180,6 +181,7 @@ void MarchingCrossTypeZero(MeshHandle_t handle){
 
                         buff[X0       ]  = ' ';
                         buff[X0+1     ]  = '*';
+                        
                         buff[X0   + 17]  = '*';
                         buff[X0+1 + 17]  = ' ';
                         buff[X0   + 34]  = ' ';
@@ -524,7 +526,7 @@ bool GenerateMesh(MeshHandle_t handle){
 
     if (Indexer_Create(&(handle->Indexer),LENGTH) && InitData(&(handle->DataField),LENGTH)){
         PopulateData(handle->DataField,LENGTH);
-        SmoothData2D(handle->DataField,LENGTH,1000);
+        SmoothData2D(handle->DataField,LENGTH,100);
 
         // set bitfields
         handle->ZeroLevel = UINT64_MAX;
