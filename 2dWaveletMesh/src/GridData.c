@@ -32,9 +32,9 @@ bool PopulateData(DataHandle_t handle, unsigned length){
     // If memory is allocated, populate with random values
     if (handle != NULL){
         for (int i = 0; i < length; ++i){
-            handle[i].data = .17 * ((double)rand() / (double)RAND_MAX);
+            handle[i].data = .2f;//.12f * ((double)rand() / (double)RAND_MAX);
         }
-
+        handle[(int)(length/2)+10].data = 5.0f;
         return true;
 
     } else {

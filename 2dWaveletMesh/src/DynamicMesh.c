@@ -354,13 +354,16 @@ void MarchingCrossTypeN(MeshHandle_t handle, int N, char* buff){
                 
                 if(deltaSum > threshold){
                     KeepZoneN1Level(j,i,handle);
+
                 } else {
+
                     if (ZeroLevelSquareIsEmpty(j,i,handle)){
                         DeleteZoneN1Level(j,i,handle);
                         buff[2] = ' ';
                         buff[2 + 4*17] = ' ';
                         buff[2*17] = ' ';
                         buff[4 + 2*17] = ' ';
+
                     }
                 }
                 break;
@@ -375,13 +378,15 @@ void MarchingCrossTypeN(MeshHandle_t handle, int N, char* buff){
                 
                 if(deltaSum > threshold){
                     KeepZoneN1Level(j,i,handle);
+                    buff[GetIndex(2,i*4)] = '*';
                 } else {
                     if (ZeroLevelSquareIsEmpty(j,i,handle)){
                         DeleteZoneN1Level(j,i,handle);
                         buff[GetIndex(0,i*4+2)] = ' ';
                         buff[GetIndex(4,i*4+2)] = ' ';
                         buff[GetIndex(2,i*4+4)] = ' ';
-                       
+                    } else {
+                        buff[GetIndex(2,i*4)] = '*';
                     }
                 }
 
@@ -399,6 +404,8 @@ void MarchingCrossTypeN(MeshHandle_t handle, int N, char* buff){
                 
                 if(deltaSum > threshold){
                     KeepZoneN1Level(j,i,handle);
+                    buff[GetIndex(j*4,2)] = '*';
+
                 } else {
                     if (ZeroLevelSquareIsEmpty(j,i,handle)){
                         DeleteZoneN1Level(j,i,handle);
@@ -406,6 +413,9 @@ void MarchingCrossTypeN(MeshHandle_t handle, int N, char* buff){
                         buff[GetIndex(j*4+2,4)] = ' ';
                         buff[GetIndex(j*4+4,2)] = ' ';
                        
+                       
+                    } else {
+                        buff[GetIndex(j*4,2)] = '*';
                     }
                 }
 
@@ -420,20 +430,24 @@ void MarchingCrossTypeN(MeshHandle_t handle, int N, char* buff){
                 
                 if(deltaSum > threshold){
                     KeepZoneN1Level(j,i,handle);
+                    buff[GetIndex(j*4+2,i*4)] = '*';
+                    buff[GetIndex(j*4,i*4+2)] = '*';
                 } else {
                     if (ZeroLevelSquareIsEmpty(j,i,handle)){
                         DeleteZoneN1Level(j,i,handle);
                         buff[GetIndex(j*4+2,i*4+4)] = ' ';
+
                         buff[GetIndex(j*4+4,i*4+2)] = ' ';
 
                        
+                    } else {
+                        buff[GetIndex(j*4+2,i*4)] = '*';
+                        buff[GetIndex(j*4,i*4+2)] = '*';
                     }
                 }
 
                 break;
             }
-
-
         }
     }
 
@@ -469,15 +483,57 @@ void MarchingCrossTypeN(MeshHandle_t handle, int N, char* buff){
         }
         if (j % 2 == 0){
             L1points[0] = data_arr[GetIndex(0,(j*4)+8)];
-            c = 1;
+            c = 2;
         } else {
             L1points[0] = data_arr[GetIndex(0,((j-1)*4)+8)];
-            c = -1;
+            c = -2;
         }
 
 
     }
 }
+
+// void DiagonalMarch(MeshHandle_t handle, int Nlevel){
+
+//     double points[2];
+//     points[1] = data_arr[0];
+//     int c = -1 * (int)(1 << (unsigned)Nlevel);
+
+//     for (int j = 0; j < 4; ++j){
+//         for (int i = 0; i < 4; ++i) {
+//             int X0 = (i * 4) + 2;
+//             int Y0 = (j * 4) + 2;
+            
+//             c *= -1;
+//             int Y_step = Y0 + c;
+//             int X_step = X0 + 2;
+
+
+//             double center_point = data_arr[GetIndex(X0,Y0)];
+//             double new_point = data_arr[GetIndex(X_step,Y_step)];
+
+//             points[0] = points[1];
+//             points[1] = new_point;
+
+//             double delta = fabs((((points[1] - points[0]) / 2) + points[0]) - center_point);
+
+//             if (delta > handle->threshold){
+//                 buff[GetIndex(X0,Y0)] = '*';
+
+//             } else if (N1LevelCrossIsEmpty(i,j,handle)) {
+//                 buff[GetIndex(X0,Y0)] = ' ';
+
+//             }
+//         }
+//         if (j % 2 == 0){
+//             points[0] = data_arr[GetIndex(0,(j*4)+8)];
+//             c = 1;
+//         } else {
+//             points[0] = data_arr[GetIndex(0,((j-1)*4)+8)];
+//             c = -1;
+//         }
+//     }
+// }
 
 // static void CompressMesh(MeshHandle_t handle);
 
@@ -529,7 +585,7 @@ bool GenerateMesh(MeshHandle_t handle){
 
     if (Indexer_Create(&(handle->Indexer),LENGTH) && InitData(&(handle->DataField),LENGTH)){
         PopulateData(handle->DataField,LENGTH);
-        SmoothData2D(handle->DataField,LENGTH,100);
+        SmoothData2D(handle->DataField,LENGTH,10);
 
         // set bitfields
         handle->ZeroLevel = UINT64_MAX;
@@ -585,29 +641,30 @@ bool GetScalarByCoordinate(int x, int y, MeshHandle_t handle, double* data){
 
 bool ZeroLevelIsEmpty(int x, int y, MeshHandle_t handle){
     int ind = x + (y*8);
-    if (ind < 64){
+
+    if ((ind<64) && !(ind<0) && !(x<0) && !(y<0) && (x<8) && (y<8)) {
         uint64_t mask = (uint64_t)(1ull << ind);
         return !((handle->ZeroLevel & mask) == mask);
     }
-    return false;
+    return true;
 }
 
 bool N1LevelIsEmpty(int x, int y, MeshHandle_t handle){
     int ind = x + (y*4);
-    if (ind < 16){
+    if ((ind<16) && !(ind<0) && !(x<0) && !(y<0) && (x<4) && (y<4)){
         uint16_t mask = (uint16_t)(1 << ind);
         return !((handle->N1Level & mask) == mask);
     }
-    return false;
+    return true;
 }
 
 bool N2LevelIsEmpty(int x, int y, MeshHandle_t handle){
     int ind = x + (y*2);
-    if (ind < 4){
+    if ((ind < 4)&& !(ind < 0) && !(x<0) && !(y<0) && (x<2) && (y<2)){
         uint8_t mask = (uint8_t)(1 << ind);
         return !((handle->N2Level & mask) == mask);
     }
-    return false;
+    return true;
 }
 
 bool ZeroLevelCrossIsEmpty(int x, int y, MeshHandle_t handle){
@@ -635,12 +692,11 @@ bool N1LevelCrossIsEmpty(int x, int y, MeshHandle_t handle){
 
 bool ZeroLevelSquareIsEmpty(int x, int y, MeshHandle_t handle){
     bool p_bool = false;
-    p_bool |= !ZeroLevelIsEmpty(x*2,y*2,handle);
-    p_bool |= !ZeroLevelIsEmpty(x*2+1,y*2,handle);
-    p_bool |= !ZeroLevelIsEmpty(x*2,y*2+1,handle);
-    p_bool |= !ZeroLevelIsEmpty(x*2+1,y*2+1,handle);
-
-    return !p_bool;
+    for (int i = -1; i < 3; ++i){
+        for (int j = -1; j < 3; ++j){
+            p_bool |= !ZeroLevelIsEmpty(2*x+j,2*y+i,handle);
+        }
+    }   return !p_bool;
 }
 
 // Toy function for tweaking algo (does not modify mesh)
