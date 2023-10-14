@@ -5,7 +5,7 @@ Marching Cross Algorithm - (2dWaveletMesh)
 The purpose of this algorithm is to adapt simulation meshes for problems with sparse fractal data. It would be very poor for evaluating harmonic functions with regularly spaced data structures.
 
 	Given a regular square grid that has size (N+1) where N is a power of 2:
-	(ex 5x5) -> * * * * *
+	(ex 5x5) -> 	* * * * *
             	* * * * *
             	* * * * *
             	* * * * *
