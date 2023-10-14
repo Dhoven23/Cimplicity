@@ -6,6 +6,7 @@
 int main()
 {
     MeshHandle_t Mesh;
+    char* buff = malloc(LENGTH * sizeof(*buff));
 
     clock_t begin = clock();
 
@@ -16,28 +17,14 @@ int main()
     	// Put your program Here ...
     	
     	SetMeshThreshold(0.1f,Mesh);
-        //DeleteGridNodes2D(Mesh);
-    	MarchingCrossTypeZero(Mesh);
-        printf("\n\n\n");
+        
+    	AdaptMesh(Mesh);
 
-        //DeleteZoneZeroLevel(5,5,Mesh);
-
-        for (int i = 0; i < 8; ++i){
-            for (int j = 0; j < 8; ++j){
-                printf(" %i ",(int)!ZeroLevelIsEmpty(j,i,Mesh));
-            }
-            printf("\n");
-        }
-        printf("\n\n");
         for (int i = 0; i < 4; ++i){
             for (int j = 0; j < 4; ++j){
-                printf(" %i ",(int)!ZeroLevelSquareIsEmpty(j,i,Mesh)); 
-                
-            }
-            printf("\n");
+                printf(" %i ",(int)N1LevelSquareIsEmpty(j,i,Mesh));
+            } printf("\n");
         }
-
-
     	// End your program Here ...
     	DestroyMesh(Mesh);
 
