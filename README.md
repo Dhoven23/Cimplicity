@@ -1,17 +1,17 @@
 # Cimplicity
-Strictly C projects (with some OpenGl)
+Marching Cross Algorithm - (2dWaveletMesh)
 
 	2dWaveletmesh:
     	The purpose of this algorithm is to adapt simulation meshes for problems with sparse fractal
     	data. It would be very poor for evaluating harmonic functions with regularly spaced
     	data structures.
 
-		Given a regular square grid that has size (N+1) where N is a power of 2:
-		(ex 5x5) -> * * * * *
-                	* * * * *
-                	* * * * *
-                	* * * * *
-                	* * * * *
+	Given a regular square grid that has size (N+1) where N is a power of 2:
+	(ex 5x5) -> * * * * *
+            	* * * * *
+            	* * * * *
+            	* * * * *
+            	* * * * *
 
     We wish to determine if the points the grid can be approximated with 
     a plane drawn between the corner points. 
@@ -32,9 +32,9 @@ Strictly C projects (with some OpenGl)
 
     To begin, evaluate the points (x) lying on lines connected to the corners
 
-          ->    * x *
-                x * x
-                * x *
+  ->    * x *
+        x * x
+        * x *
     
     The evaluation is simple, the points (*) are called the 'ring' because
     we can imagine them as a mathematical ring where each point is distance 4 
@@ -83,9 +83,9 @@ Strictly C projects (with some OpenGl)
           /   \
         *   *   *
 
-        The analysis is the same as before, but rather than a ring, we have a staggering sequence
-        of points shifting through a 1D array of 2 points [0,1] where the first point becomes the 
-        last with each step:
+    The analysis is the same as before, but rather than a ring, we have a staggering sequence
+    of points shifting through a 1D array of 2 points [0,1] where the first point becomes the 
+    last with each step:
 
         (1)    (3) 
           \   /   \  ... 
@@ -96,7 +96,7 @@ Strictly C projects (with some OpenGl)
     and pop in a new point to draw the next line. The evaluation is the same as before, but only a single
     point is evaluated for each 3x3 grid (see above) so the decision to keep/discard is point by point.
 
-        After these steps, we achieve the final grid!
+    After these steps, we achieve the final grid!
 
         * * * * *                          *    *    *
         * * * * *
@@ -104,20 +104,20 @@ Strictly C projects (with some OpenGl)
         * * * * *
         * * * * *                          *    *    *
 
-        This process can be repeated, by starting with the new 3x3 grid (that was 5x5) for arbitrary initial
-        grid sizes, as long as it is size length (N+1) where N is a power of 2. 
+    This process can be repeated, by starting with the new 3x3 grid (that was 5x5) for arbitrary initial
+    grid sizes, as long as it is size length (N+1) where N is a power of 2. 
 
-        The astute will observe however, that much repeated calculation is performed.
+    The astute will observe however, that much repeated calculation is performed.
 
-        For the 5x5 grid, there are 4 3x3 grids, and all 4 share a side. So the interpolation for 
-        each side is performed twice! This adds much calculation for very large grids. Furthermore, suppose
-        we have 2 grids A and B side by side,
-         
+    For the 5x5 grid, there are 4 3x3 grids, and all 4 share a side. So the interpolation for 
+    each side is performed twice! This adds much calculation for very large grids. Furthermore, suppose
+    we have 2 grids A and B side by side,
+     
         * * * * *
         * A x B *
         * * * * *
 
-        If B is refined, and A is not, we will end up with
+    If B is refined, and A is not, we will end up with
 
         * * *   *
         * A   B   
