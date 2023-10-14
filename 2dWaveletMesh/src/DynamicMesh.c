@@ -13,7 +13,7 @@
 
     This module is responsible for Generating, Adapting, conmpressing, 
     and decompressing data stored in the MeshHandle_t data type. It makes
-    use of the Marching Crosses algorithm described below. 
+    use of the Marching Crosses algorithm. 
 
     Given a regular square grid that has size (N+1) where N is a power of 2:
 
