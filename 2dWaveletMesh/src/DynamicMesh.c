@@ -222,9 +222,6 @@ bool GenerateMesh(MeshHandle_t handle){
             handle->Indexer[i].data_ptr = (void*)(&(handle->DataField[i]));
             DataHandle_t p_data;
         }
-
-
-
         return true;
     } else {
         return false;
@@ -604,7 +601,7 @@ static void MarchingCrossTypeN(MeshHandle_t handle, int Nlevel, char* buff){
 
                     deltaSum += fabs((((r[r2] - r[r1]) / 2) + r[r1]) - p[i]);
                 }
-                
+
                 if(deltaSum > threshold){
                     switch(Nlevel){
                     case 1:
@@ -613,9 +610,8 @@ static void MarchingCrossTypeN(MeshHandle_t handle, int Nlevel, char* buff){
                     case 2:
                         KeepZoneN2Level(j,i,handle);
                     }
-                    
-
                 } else {
+
                     bool p_bool;
                     switch (Nlevel){
                     case 1:
@@ -654,8 +650,11 @@ static void MarchingCrossTypeN(MeshHandle_t handle, int Nlevel, char* buff){
                             KeepZoneN2Level(j,i,handle);
                     break;
                     }
+
                     buff[GetIndex(2,i*4)] = '*';
+
                 } else {
+
                     bool p_bool;
                     switch (Nlevel){
                     case 1:
@@ -805,7 +804,6 @@ static void DiagonalMarch(MeshHandle_t handle, int Nlevel, char* buff){
             int Y_step = Y0 + c;
             int X_step = X0 + mult;
 
-
             double center_point = data_arr[GetIndex(X0,Y0)];
             double new_point = data_arr[GetIndex(X_step,Y_step)];
 
@@ -835,8 +833,6 @@ static void DiagonalMarch(MeshHandle_t handle, int Nlevel, char* buff){
                 } else {
                     buff[GetIndex(X0,Y0)] = '*';
                 }
-                
-
             }
         }
         if (j % 2 == 0){
@@ -858,7 +854,6 @@ static void RefineMesh(MeshHandle_t handle){
     DiagonalMarch(handle,1,buff);
     MarchingCrossTypeN(handle,2,buff);
     DiagonalMarch(handle,2,buff);
-
 
     // print mesh
     int count = 0;
