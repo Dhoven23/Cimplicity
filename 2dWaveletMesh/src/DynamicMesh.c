@@ -795,6 +795,8 @@ static void MarchingCrossTypeN(MeshHandle_t handle, int Nlevel, char* buff){
                     }
                     buff[GetIndex(X0  ,Y0-mult)] = '*';
                     buff[GetIndex(X0-mult,Y0  )] = '*';
+                    buff[GetIndex(X0  ,Y0+mult)] = '*';
+                    buff[GetIndex(X0+mult,Y0  )] = '*';
 
 
                 } else {
@@ -809,6 +811,7 @@ static void MarchingCrossTypeN(MeshHandle_t handle, int Nlevel, char* buff){
                         if (p_bool) DeleteZoneN2Level(j,i,handle);
                         
                     }
+
                     
                     if (p_bool){
                         
@@ -817,6 +820,10 @@ static void MarchingCrossTypeN(MeshHandle_t handle, int Nlevel, char* buff){
                         buff[GetIndex(X0+mult,Y0  )] = ' ';
 
                        
+                    } else {
+                        buff[GetIndex(X0  ,Y0-mult)] = '*';
+
+                        buff[GetIndex(X0-mult,Y0  )] = '*';
                     }
                 } break;
             }
@@ -943,8 +950,9 @@ static void ResetNeighbors(MeshHandle_t handle){
     FindNeighborsN1Level(handle,buff);
     FindNeighborsN2Level(handle,buff);
     FindNeighborsN3Level(handle,buff);
-    printf("\n\n-----N3 Level-------\n");
+    printf("\n\n-----N3 Level-------\n\n");
     PrintNeighborBuffer(buff);
+    printf("\n");
 
     free(buff);
 }
