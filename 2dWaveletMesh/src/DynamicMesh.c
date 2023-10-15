@@ -216,11 +216,11 @@ bool GenerateMesh(MeshHandle_t handle){
         handle->N1Level    = UINT16_MAX;
         handle->N2Level   = 15u;
         handle->N3Level   = 1u;
+        handle->length = LENGTH;
 
         for (int i = 0; i < LENGTH; ++i)
         {
             handle->Indexer[i].data_ptr = (void*)(&(handle->DataField[i]));
-            DataHandle_t p_data;
         }
         return true;
     } else {
@@ -242,8 +242,10 @@ void getMeshThreshold(double* p_threshold, MeshHandle_t handle) {
 }
 
 void AdaptMesh(MeshHandle_t handle){
-    RefineMesh(handle);
-    TransposeMesh(handle);
+    char* buff = malloc(LENGTH * sizeof *buff);
+    RefineMesh(handle, buff);
+    TransposeMesh(handle, buff);
+    ResetNeighbors(handle);
 }
 
 bool GetScalarByCoordinate(int x, int y, MeshHandle_t handle, double* data){
@@ -776,7 +778,6 @@ static void DiagonalMarch(MeshHandle_t handle, int Nlevel, char* buff){
 
     // calculate local values
     int mult = (int)(1 << (unsigned)Nlevel);
-    printf("mult = %i\n",mult);
     int bound = 8 / (mult);
     int c = -mult;
 
@@ -845,8 +846,8 @@ static void DiagonalMarch(MeshHandle_t handle, int Nlevel, char* buff){
     }
 }
 
-static void RefineMesh(MeshHandle_t handle){
-    char* buff = malloc(LENGTH * sizeof (*buff));
+static void RefineMesh(MeshHandle_t handle, char* buff){
+
 
     MarchingCrossTypeZero(handle,buff);
     DiagonalMarch(handle,0,buff);
@@ -857,6 +858,7 @@ static void RefineMesh(MeshHandle_t handle){
 
     // print mesh
     int count = 0;
+    printf("\n");
     for (int j = 0; j < 17; ++j){
         for (int i = 0; i < 17; ++i){
             printf("%c ",buff[i + j*17]);
@@ -864,14 +866,78 @@ static void RefineMesh(MeshHandle_t handle){
         }
         printf("\n");
     }
-    printf("\nCompression ratio: %.2f%%\n\n",(double)(((double)count*100.0f) / (double)(LENGTH)));
+    printf("\nCompression ratio: %i\n\n",count);
 }
 
 
 /*/-------------------------------------------------------
     DATA RECOALESCION (BE CAREFUL!!)
 / /---------------------------------------------------- */
-static void TransposeMesh(MeshHandle_t handle){};
+
+static void ResetNeighbors(MeshHandle_t handle){
+    for (int i = 0; i < 8; i++){
+        for (int j = 0; j < 8; j++){
+            if (!ZeroLevelIsEmpty(j,i,handle)){
+                int cross = ((j == 0) && (i == 0)) ? 0 : 0;
+                    cross = ((j == 0) && (i != 0)) ? 1 : cross;
+                    cross = ((j != 0) && (i == 0)) ? 2 : cross;
+                    cross = ((j != 0) && (i != 0)) ? 3 : cross;
+                int X0 = 2*j + 1;
+                int Y0 = 2*i + 1;
+                IndexHandle_t p_index;
+                IndexHandle_t p_neighbor;
+                // TODO: cache found neighbors to reduce brute force searches
+
+                int p_X[4] = {1,0,-1,0}; // dx ring
+                int p_Y[4] = {0,-1,0,1}; // dy ring
+                int ring[4] = {0,1,2,3}; // neighbor ring
+                int ring_inv[4] = {2,3,0,1}; // ring inverse
+                for (int i = 0; i < 4; ++i){
+                    int X = X0 + p_X[i];
+                    int Y = Y0 + p_Y[i];
+                    if (Indexer_GetIndexByCoordinate(X,Y,handle->Indexer,&p_index)){
+                        for (int j = 0; j < 4; ++j){
+                            X = X + p_X[j];
+                            Y = Y + p_Y[j];
+                            if (Indexer_GetIndexByCoordinate(X,Y,handle->Indexer,&p_neighbor)){
+                                p_index->neighbors[ring[j]]     = (void*)p_neighbor;
+                                p_neighbor->neighbors[ring_inv[j]] = (void*)p_index;
+                            } else {
+                                p_index->neighbors[ring[j]] = NULL;
+                            }
+                        }
+                    }
+                }  
+            }
+        }
+    }
+}
+
+static void TransposeMesh(MeshHandle_t handle, char* buff){
+
+    IndexHandle_t p_index;
+    DataHandle_t p_data;
+    p_index = malloc(LENGTH * sizeof(*p_index));
+    p_data = malloc(LENGTH * sizeof(*p_data));
+    memset(p_index,'\0',LENGTH*sizeof(*p_index));
+    memset(p_data, '\0',LENGTH*sizeof(*p_data));
+
+    unsigned count = 0;
+
+    for (int i = 0; i < LENGTH; ++i){
+        if (buff[i] == '*'){
+            p_index[count++] = (handle->Indexer[i]);
+            p_data[count-1]  = *((DataHandle_t)(handle->Indexer[i].data_ptr));
+            p_index[count-1].data_ptr = (void*)(p_data+count-1);
+        } 
+    }
+
+    free(handle->Indexer);
+    free(handle->DataField);
+    handle->Indexer = realloc(p_index,(count)*sizeof(*p_index));  
+    handle->DataField = realloc(p_data,(count)*sizeof(*p_data));
+    handle->length = count+1;
+}
 
 
 /*/-------------------------------------------------------

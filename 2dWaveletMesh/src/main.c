@@ -20,9 +20,15 @@ int main()
         
     	AdaptMesh(Mesh);
 
+        for (int i = 0; i < 8; ++i){
+            for (int j = 0; j < 8; ++j){
+                printf(" %i ",(int)!ZeroLevelIsEmpty(j,i,Mesh));
+            } printf("\n");
+        }
+        printf("\n");
         for (int i = 0; i < 4; ++i){
             for (int j = 0; j < 4; ++j){
-                printf(" %i ",(int)N1LevelSquareIsEmpty(j,i,Mesh));
+                printf(" %i ",(int)!N1LevelIsEmpty(j,i,Mesh));
             } printf("\n");
         }
     	// End your program Here ...

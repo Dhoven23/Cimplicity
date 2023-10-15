@@ -24,8 +24,8 @@ bool Indexer_Create(IndexHandle_t* handle, unsigned length){
 		(p_handle+i)->neighbors[1]	= (y > 0) ? (void*)(p_handle+i-17) : NULL;
 		(p_handle+i)->neighbors[2]	= (x > 0) ? (void*)(p_handle+i- 1) : NULL;
 		(p_handle+i)->neighbors[3]	= (y < 16) ? (void*)(p_handle+i+17) : NULL;
-		(p_handle+i)->data_ptr		= (void*)(1);
-	
+		(p_handle+i)->data_ptr		= NULL;
+		(p_handle+i)->b_IsInterp 	= false;	
 	}
 
 	*handle = p_handle;
@@ -37,8 +37,7 @@ bool Indexer_Create(IndexHandle_t* handle, unsigned length){
 
 // Lookup neighbor
 bool Indexer_GetNeighbor(IndexHandle_t* ret_handle, IndexHandle_t handle, int loc){
-	if ((loc < 4))
-	{
+	if ((loc < 4)){
 		IndexHandle_t p_handle = NULL;
 		p_handle = (handle->neighbors[loc] != NULL) ? (IndexHandle_t)(handle->neighbors[loc]) : NULL;
 	
@@ -52,6 +51,17 @@ bool Indexer_GetNeighbor(IndexHandle_t* ret_handle, IndexHandle_t handle, int lo
 	} else {
 		return false;
 	}
+}
+
+bool Indexer_SetNeighbor(int loc, int x, int y, IndexHandle_t handle, IndexHandle_t index){
+	if ((loc < 4) && (loc > -1)){
+		IndexHandle_t p_handle;
+		if (Indexer_GetIndexByCoordinate(x, y, index, &p_handle)){
+			handle->neighbors[loc] = p_handle;
+			return true;
+		}
+	}
+	return false;
 }
 
 // get XY coordinates of grid node (or at offset of index if index != 0)
@@ -93,7 +103,7 @@ bool Indexer_GetIndexByCoordinate(int x, int y, IndexHandle_t handle, IndexHandl
 	int direction = 0, init_direction = 0;
 	IndexHandle_t p_handle;
 
-	if (x > 16 || y > 16) {return false;}
+	if ((x > 16) || (y > 16) || (x < 0) || (y < 0)) {return false;}
 
 	b_found = priv_CoordinateSearch(x,y,handle,&p_handle);
 	if (b_found){
@@ -144,29 +154,3 @@ bool priv_CoordinateSearch(int x, int y, IndexHandle_t p_handle, IndexHandle_t* 
 	}
 	return false;
 }
-
-// int main(){
-
-// 	IndexHandle_t index;
-// 	Indexer_Create(&index,17*17);
-	
-
-// 	IndexHandle_t result;
-// 	clock_t begin = clock();
-
-
-// 	if (Indexer_GetIndexByCoordinate(16,16,index,&result)){
-// 		printf("[%i][%i]\n",result->coordinate[0],result->coordinate[1]);
-// 	}
-
-// 	clock_t end = clock();
-// 	double duration = (double)(end-begin)/CLOCKS_PER_SEC;
-// 	duration *= 1000;
-// 	printf("%.3f ms\n",duration);
-	
-// 	Indexer_Destroy(index);
-
-// 	//free(neighbor);
-
-// 	return 0;
-// }

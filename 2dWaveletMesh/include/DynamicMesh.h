@@ -12,6 +12,7 @@ struct priv_MeshHandle{
 	uint8_t  N2Level : 4;
 	uint8_t  N3Level : 1;
 	double threshold;
+	unsigned length;
 };
 
 // Public data type
@@ -41,6 +42,12 @@ bool N1LevelSquareIsEmpty(int x, int y, MeshHandle_t handle);
 
 bool N2LevelCrossIsEmpty(int x, int y, MeshHandle_t handle);
 
+bool ZeroLevelIsEmpty(int x, int y, MeshHandle_t handle);
+
+bool N1LevelIsEmpty(int x, int y, MeshHandle_t handle);
+
+bool N2LevelIsEmpty(int x, int y, MeshHandle_t handle);
+
 // private functions
 static void MarchingCrossTypeZero(MeshHandle_t handle, char* buff);
 
@@ -52,20 +59,17 @@ static void CompressMesh(MeshHandle_t handle);
 
 static void DecompressMesh(MeshHandle_t handle);
 
-static void RefineMesh(MeshHandle_t handle);
+static void RefineMesh(MeshHandle_t handle, char* buff);
 
-static void TransposeMesh(MeshHandle_t handle);
+static void TransposeMesh(MeshHandle_t handle, char* buff);
+
+static void ResetNeighbors(MeshHandle_t handle);
 
 // Grid Logic
 static void KeepZoneN2Level(int x, int y, MeshHandle_t handle);
 
 static void DeleteZoneN2Level(int x, int y, MeshHandle_t handle);
 
-static bool ZeroLevelIsEmpty(int x, int y, MeshHandle_t handle);
-
-static bool N1LevelIsEmpty(int x, int y, MeshHandle_t handle);
-
-static bool N2LevelIsEmpty(int x, int y, MeshHandle_t handle);
 
 static void KeepZoneZeroLevel(int x, int y, MeshHandle_t handle);
 

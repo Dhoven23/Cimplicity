@@ -18,6 +18,7 @@ struct priv_IndexNode {
 	int coordinate[2];
 	void* data_ptr;
 	void* neighbors[4];
+	bool b_IsInterp;
 };
 
 
@@ -30,6 +31,8 @@ bool Indexer_Destroy(IndexHandle_t handle);
 void Indexer_Print(IndexHandle_t handle, unsigned length);
 
 bool Indexer_GetNeighbor(IndexHandle_t* ret_handle, IndexHandle_t handle, int loc);
+
+bool Indexer_SetNeighbor(int loc, int x, int y, IndexHandle_t handle, IndexHandle_t index);
 
 bool Indexer_GetCoordinates(int* x, int* y, IndexHandle_t handle, int index);
 
