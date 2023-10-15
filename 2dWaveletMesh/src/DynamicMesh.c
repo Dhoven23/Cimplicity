@@ -209,7 +209,7 @@ bool GenerateMesh(MeshHandle_t handle){
 
     if (Indexer_Create(&(handle->Indexer),LENGTH) && InitData(&(handle->DataField),LENGTH)){
         PopulateData(handle->DataField,LENGTH);
-        SmoothData2D(handle->DataField,LENGTH,10);
+        SmoothData2D(handle->DataField,LENGTH,1000);
 
         // set bitfields
         handle->ZeroLevel = UINT64_MAX;
@@ -653,7 +653,7 @@ static void MarchingCrossTypeN(MeshHandle_t handle, int Nlevel, char* buff){
                     break;
                     }
 
-                    buff[GetIndex(2,i*4)] = '*';
+                    buff[GetIndex(mult,i*2*mult)] = '*';
 
                 } else {
 
@@ -697,7 +697,7 @@ static void MarchingCrossTypeN(MeshHandle_t handle, int Nlevel, char* buff){
                             KeepZoneN2Level(j,i,handle);
                     break;
                     }
-                    buff[GetIndex(X0-2,2)] = '*';
+                    buff[GetIndex(X0-mult,mult)] = '*';
 
                 } else {
                     bool p_bool;
@@ -740,8 +740,10 @@ static void MarchingCrossTypeN(MeshHandle_t handle, int Nlevel, char* buff){
                             KeepZoneN2Level(j,i,handle);
                     break;
                     }
-                    buff[GetIndex(X0  ,Y0-2)] = '*';
-                    buff[GetIndex(X0-2,Y0  )] = '*';
+                    buff[GetIndex(X0  ,Y0-mult)] = '*';
+                    buff[GetIndex(X0-mult,Y0  )] = '*';
+
+
                 } else {
                     bool p_bool;
                     switch (Nlevel){
@@ -756,15 +758,12 @@ static void MarchingCrossTypeN(MeshHandle_t handle, int Nlevel, char* buff){
                     }
                     
                     if (p_bool){
-                        DeleteZoneN1Level(j,i,handle);
+                        
                         buff[GetIndex(X0  ,Y0+mult)] = ' ';
 
                         buff[GetIndex(X0+mult,Y0  )] = ' ';
 
                        
-                    } else {
-                        buff[GetIndex(X0  ,Y0-mult)] = '*';
-                        buff[GetIndex(X0-mult,Y0)] = '*';
                     }
                 } break;
             }
@@ -815,6 +814,15 @@ static void DiagonalMarch(MeshHandle_t handle, int Nlevel, char* buff){
 
             if (delta > handle->threshold){
                 buff[GetIndex(X0,Y0)] = '*';
+                if (Nlevel == 0){
+                    KeepZoneZeroLevel(i,j,handle);
+                } else if (Nlevel == 1) {
+                    KeepZoneN1Level(i,j,handle);
+                } else if (Nlevel == 2) {
+                    KeepZoneN2Level(i,j,handle);
+                }
+                
+                printf("[%i,%i]=%.2f\n",X0,Y0,delta);
 
             } else {
                 bool p_bool;
@@ -831,9 +839,7 @@ static void DiagonalMarch(MeshHandle_t handle, int Nlevel, char* buff){
 
                 if (p_bool){
                     buff[GetIndex(X0,Y0)] = ' ';
-                } else {
-                    buff[GetIndex(X0,Y0)] = '*';
-                }
+                } 
             }
         }
         if (j % 2 == 0){
@@ -875,15 +881,28 @@ static void RefineMesh(MeshHandle_t handle, char* buff){
 / /---------------------------------------------------- */
 
 static void ResetNeighbors(MeshHandle_t handle){
+    int length = 33*33;
+    char* buff = malloc(length * sizeof(*buff));
+    memset(buff,' ',length * sizeof(*buff));
+
+    FindNeighborsZeroLevel(handle, buff);
+    printf("\n\n-----Zero Level-------\n");
+    PrintNeighborBuffer(buff);
+    FindNeighborsN1Level(handle,buff);
+    printf("\n\n-----N1 Level-------\n");
+    PrintNeighborBuffer(buff);
+
+    free(buff);
+}
+
+static void FindNeighborsZeroLevel(MeshHandle_t handle, char* buff){
     for (int i = 0; i < 8; i++){
         for (int j = 0; j < 8; j++){
             if (!ZeroLevelIsEmpty(j,i,handle)){
-                int cross = ((j == 0) && (i == 0)) ? 0 : 0;
-                    cross = ((j == 0) && (i != 0)) ? 1 : cross;
-                    cross = ((j != 0) && (i == 0)) ? 2 : cross;
-                    cross = ((j != 0) && (i != 0)) ? 3 : cross;
+
                 int X0 = 2*j + 1;
                 int Y0 = 2*i + 1;
+
                 IndexHandle_t p_index;
                 IndexHandle_t p_neighbor;
                 // TODO: cache found neighbors to reduce brute force searches
@@ -892,24 +911,105 @@ static void ResetNeighbors(MeshHandle_t handle){
                 int p_Y[4] = {0,-1,0,1}; // dy ring
                 int ring[4] = {0,1,2,3}; // neighbor ring
                 int ring_inv[4] = {2,3,0,1}; // ring inverse
+                char ring_buff[4] = {'-','|','-','|'};
                 for (int i = 0; i < 4; ++i){
                     int X = X0 + p_X[i];
                     int Y = Y0 + p_Y[i];
+                   
                     if (Indexer_GetIndexByCoordinate(X,Y,handle->Indexer,&p_index)){
                         for (int j = 0; j < 4; ++j){
-                            X = X + p_X[j];
-                            Y = Y + p_Y[j];
-                            if (Indexer_GetIndexByCoordinate(X,Y,handle->Indexer,&p_neighbor)){
-                                p_index->neighbors[ring[j]]     = (void*)p_neighbor;
-                                p_neighbor->neighbors[ring_inv[j]] = (void*)p_index;
-                            } else {
-                                p_index->neighbors[ring[j]] = NULL;
+                            int b_X = 2*X + p_X[j];
+                            int b_Y = 2*Y + p_Y[j];
+                            int x = X + p_X[j];
+                            int y = Y + p_Y[j];
+                            if (p_index->neighbors[j] == NULL) {
+                                if (Indexer_GetIndexByCoordinate(x,y,handle->Indexer,&p_neighbor)){
+                                    p_index->neighbors[ring[j]]     = (void*)p_neighbor;
+                                    p_neighbor->neighbors[ring_inv[j]] = (void*)p_index;
+                                    int ind;
+                                    if (NeighborBufferIndex(b_X,b_Y,&ind)){
+                                        buff[ind] = ring_buff[j];
+                                        buff[(2*X + (2*Y)*33)] = '*';
+                                        buff[(2*x + (2*y)*33)] = '*';
+                                    }
+                                } else {
+                                    p_index->neighbors[ring[j]] = NULL;
+                                }
                             }
                         }
                     }
                 }  
             }
         }
+    }
+}
+
+static void FindNeighborsN1Level(MeshHandle_t handle, char* buff){
+for (int i = 0; i < 4; i++){
+        for (int j = 0; j < 4; j++){
+            if (!N1LevelIsEmpty(j,i,handle)){
+
+                int X0 = 4*j + 2;
+                int Y0 = 4*i + 2;
+
+                IndexHandle_t p_index;
+                IndexHandle_t p_neighbor;
+                // TODO: cache found neighbors to reduce brute force searches
+
+                int p_X[4] = {2,0,-2,0}; // dx ring
+                int p_Y[4] = {0,-2,0,2}; // dy ring
+                int ring[4] = {0,1,2,3}; // neighbor ring
+                int ring_inv[4] = {2,3,0,1}; // ring inverse
+                char ring_buff[4] = {'-','|','-','|'};
+                for (int i = 0; i < 4; ++i){
+                    int X = X0 + p_X[i];
+                    int Y = Y0 + p_Y[i];
+                    
+                    if (Indexer_GetIndexByCoordinate(X,Y,handle->Indexer,&p_index)){
+                        for (int j = 0; j < 4; ++j){
+                            int b_X = 2*X + p_X[j];
+                            int b_Y = 2*Y + p_Y[j];
+                            int x = X + p_X[j];
+                            int y = Y + p_Y[j];
+                            if (p_index->neighbors[j] == NULL) {
+                                if (Indexer_GetIndexByCoordinate(x,y,handle->Indexer,&p_neighbor)){
+                                    p_index->neighbors[ring[j]]     = (void*)p_neighbor;
+                                    p_neighbor->neighbors[ring_inv[j]] = (void*)p_index;
+                                    int ind;
+                                    if (NeighborBufferIndex(b_X,b_Y,&ind)){
+                                        buff[ind] = ring_buff[j];
+                                        buff[(2*X + (2*Y)*33)] = '*';
+
+                                        buff[(2*x + (2*y)*33)] = '*';
+                                    }
+                                } else {
+                                    p_index->neighbors[ring[j]] = NULL;
+                                }
+                            }
+                        }
+                    }
+                }  
+            }
+        }
+    }
+}
+
+static bool NeighborBufferIndex(int x,int y, int* ind){
+    int p_ind = x+33*y;
+    if((p_ind < (33*33)) && (p_ind > -1) && (x < 33) && (x > -1) && (y < 33) && (y > -1)){
+        *ind = p_ind;
+        return true;
+    } return false;
+}
+
+static void PrintNeighborBuffer(char* buff){
+    unsigned count = 33;
+    for (int i = 0; i < count; ++i){
+        for (int j = 0; j < count; ++j){
+            int ind = 0;
+            NeighborBufferIndex(j,i,&ind);
+            printf(" %c ",buff[ind]);
+        } printf("\n");
     }
 }
 
@@ -929,6 +1029,11 @@ static void TransposeMesh(MeshHandle_t handle, char* buff){
             p_index[count++] = (handle->Indexer[i]);
             p_data[count-1]  = *((DataHandle_t)(handle->Indexer[i].data_ptr));
             p_index[count-1].data_ptr = (void*)(p_data+count-1);
+            p_index[count-1].neighbors[0] = NULL;
+            p_index[count-1].neighbors[1] = NULL;
+            p_index[count-1].neighbors[2] = NULL;
+            p_index[count-1].neighbors[3] = NULL;
+
         } 
     }
 
@@ -937,6 +1042,7 @@ static void TransposeMesh(MeshHandle_t handle, char* buff){
     handle->Indexer = realloc(p_index,(count)*sizeof(*p_index));  
     handle->DataField = realloc(p_data,(count)*sizeof(*p_data));
     handle->length = count+1;
+
 }
 
 

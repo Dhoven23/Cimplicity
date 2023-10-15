@@ -119,7 +119,7 @@ bool priv_CoordinateSearch(int x, int y, IndexHandle_t p_handle, IndexHandle_t* 
 
 	IndexHandle_t temp_handle;
 
-	bool b_found;
+	bool b_found = false;
 	int count = 0;
 
 	int offset = 0;
@@ -129,10 +129,8 @@ bool priv_CoordinateSearch(int x, int y, IndexHandle_t p_handle, IndexHandle_t* 
 	}
 
 	while(true){
-		count++;
-		temp_handle = (IndexHandle_t)(p_handle+count);
-		
 
+		temp_handle = &(p_handle[count++]);
 		int priv_x, priv_y;
 
 		Indexer_GetCoordinates(&priv_x,&priv_y,temp_handle,0);
@@ -140,6 +138,8 @@ bool priv_CoordinateSearch(int x, int y, IndexHandle_t p_handle, IndexHandle_t* 
 		if ((priv_y == y) && (priv_x == x)){
 			if (temp_handle->data_ptr != NULL) {
 				b_found = true;
+			} else {
+				b_found = false;
 			}
 		}
 

@@ -65,11 +65,18 @@ static void TransposeMesh(MeshHandle_t handle, char* buff);
 
 static void ResetNeighbors(MeshHandle_t handle);
 
+static bool NeighborBufferIndex(int x,int y, int* ind);
+
+static void PrintNeighborBuffer(char* buff);
+
+static void FindNeighborsZeroLevel(MeshHandle_t handle, char* buff);
+
+static void FindNeighborsN1Level(MeshHandle_t handle, char* buff);
+
 // Grid Logic
 static void KeepZoneN2Level(int x, int y, MeshHandle_t handle);
 
 static void DeleteZoneN2Level(int x, int y, MeshHandle_t handle);
-
 
 static void KeepZoneZeroLevel(int x, int y, MeshHandle_t handle);
 
