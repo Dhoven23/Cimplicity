@@ -920,12 +920,13 @@ static void RefineMesh(MeshHandle_t handle, char* buff){
     printf("\n");
     for (int j = 0; j < 17; ++j){
         for (int i = 0; i < 17; ++i){
-            //printf("%c ",buff[i + j*17]);
+            printf("%c ",buff[i + j*17]);
             if (buff[i + j*17] == '*') count++;
         }
-        //printf("\n");
+        printf("\n");
     }
-    printf("\nCompression ratio: %i\n\n",count);
+    double ratio = (((double)count) / ((double)LENGTH))*100.0f;
+    printf("\nCompression ratio: %.2f%%\n\n",ratio);
 }
 
 
@@ -942,8 +943,8 @@ static void ResetNeighbors(MeshHandle_t handle){
     FindNeighborsN1Level(handle,buff);
     FindNeighborsN2Level(handle,buff);
     FindNeighborsN3Level(handle,buff);
-    //printf("\n\n-----N3 Level-------\n");
-    //PrintNeighborBuffer(buff);
+    printf("\n\n-----N3 Level-------\n");
+    PrintNeighborBuffer(buff);
 
     free(buff);
 }
@@ -1158,7 +1159,7 @@ static void PrintNeighborBuffer(char* buff){
         for (int j = 0; j < count; ++j){
             int ind = 0;
             NeighborBufferIndex(j,i,&ind);
-            printf(" %c ",buff[ind]);
+            printf("%c ",buff[ind]);
         } printf("\n");
     }
 }
