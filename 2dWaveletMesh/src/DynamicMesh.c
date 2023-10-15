@@ -203,7 +203,53 @@
 #include "header.h"
 #include "DynamicMesh.h"
 
+
+// private functions
+static void MarchingCrossTypeZero(MeshHandle_t handle, char* buff);
+
+static void MarchingCrossTypeN(MeshHandle_t handle, int N, char* buff);
+
+static void DiagonalMarch(MeshHandle_t handle, int Nlevel, char* buff);
+
+static void CompressMesh(MeshHandle_t handle);
+
+static void DecompressMesh(MeshHandle_t handle);
+
+static void RefineMesh(MeshHandle_t handle, char* buff);
+
+static void TransposeMesh(MeshHandle_t handle, char* buff);
+
+static void ResetNeighbors(MeshHandle_t handle);
+
+static bool NeighborBufferIndex(int x,int y, int* ind);
+
+static void PrintNeighborBuffer(char* buff);
+
+static void FindNeighborsZeroLevel(MeshHandle_t handle, char* buff);
+
+static void FindNeighborsN1Level(MeshHandle_t handle, char* buff);
+
+static void FindNeighborsN2Level(MeshHandle_t handle, char* buff);
+
+static void FindNeighborsN3Level(MeshHandle_t handle, char* buff);
+
+// Grid Logic
+static void KeepZoneN2Level(int x, int y, MeshHandle_t handle);
+
+static void DeleteZoneN2Level(int x, int y, MeshHandle_t handle);
+
+static void KeepZoneZeroLevel(int x, int y, MeshHandle_t handle);
+
+static void DeleteZoneZeroLevel(int x, int y, MeshHandle_t handle);
+
+static void KeepZoneN1Level(int x, int y, MeshHandle_t handle);
+
+static void DeleteZoneN1Level(int x, int y, MeshHandle_t handle);
+
+
+
 // Public functions
+
 
 bool GenerateMesh(MeshHandle_t handle){
 
@@ -253,7 +299,7 @@ bool GetScalarByCoordinate(int x, int y, MeshHandle_t handle, double* data){
     IndexHandle_t p_index;
     DataHandle_t p_data;
     double data_out;
-    Indexer_GetIndexByCoordinate(x,y,(handle->Indexer),&p_index);
+    Indexer_GetIndexByCoordinate(1,x,y,(handle->Indexer),&p_index);
     bool b_IsValidData = false, b_IsValidPointer = false;
 
     b_IsValidPointer = GetData(p_index->data_ptr,&p_data);
@@ -874,10 +920,10 @@ static void RefineMesh(MeshHandle_t handle, char* buff){
     printf("\n");
     for (int j = 0; j < 17; ++j){
         for (int i = 0; i < 17; ++i){
-            printf("%c ",buff[i + j*17]);
+            //printf("%c ",buff[i + j*17]);
             if (buff[i + j*17] == '*') count++;
         }
-        printf("\n");
+        //printf("\n");
     }
     printf("\nCompression ratio: %i\n\n",count);
 }
@@ -893,17 +939,11 @@ static void ResetNeighbors(MeshHandle_t handle){
     memset(buff,' ',length * sizeof(*buff));
 
     FindNeighborsZeroLevel(handle, buff);
-    printf("\n\n-----Zero Level-------\n");
-    PrintNeighborBuffer(buff);
     FindNeighborsN1Level(handle,buff);
-    printf("\n\n-----N1 Level-------\n");
-    PrintNeighborBuffer(buff);
     FindNeighborsN2Level(handle,buff);
-    printf("\n\n-----N2 Level-------\n");
-    PrintNeighborBuffer(buff);
     FindNeighborsN3Level(handle,buff);
-    printf("\n\n-----N3 Level-------\n");
-    PrintNeighborBuffer(buff);
+    //printf("\n\n-----N3 Level-------\n");
+    //PrintNeighborBuffer(buff);
 
     free(buff);
 }
@@ -929,14 +969,14 @@ static void FindNeighborsZeroLevel(MeshHandle_t handle, char* buff){
                     int X = X0 + p_X[i];
                     int Y = Y0 + p_Y[i];
                    
-                    if (Indexer_GetIndexByCoordinate(X,Y,handle->Indexer,&p_index)){
+                    if (Indexer_GetIndexByCoordinate(1,X,Y,handle->Indexer,&p_index)){
                         for (int j = 0; j < 4; ++j){
                             int b_X = 2*X + p_X[j];
                             int b_Y = 2*Y + p_Y[j];
                             int x = X + p_X[j];
                             int y = Y + p_Y[j];
                             if (p_index->neighbors[j] == NULL) {
-                                if (Indexer_GetIndexByCoordinate(x,y,handle->Indexer,&p_neighbor)){
+                                if (Indexer_GetIndexByCoordinate(1,x,y,handle->Indexer,&p_neighbor)){
                                     p_index->neighbors[ring[j]]     = (void*)p_neighbor;
                                     p_neighbor->neighbors[ring_inv[j]] = (void*)p_index;
                                     int ind;
@@ -978,14 +1018,14 @@ for (int i = 0; i < 4; i++){
                     int X = X0 + p_X[i];
                     int Y = Y0 + p_Y[i];
                     
-                    if (Indexer_GetIndexByCoordinate(X,Y,handle->Indexer,&p_index)){
+                    if (Indexer_GetIndexByCoordinate(1,X,Y,handle->Indexer,&p_index)){
                         for (int j = 0; j < 4; ++j){
                             int b_X = 2*X + p_X[j];
                             int b_Y = 2*Y + p_Y[j];
                             int x = X + p_X[j];
                             int y = Y + p_Y[j];
                             if (p_index->neighbors[j] == NULL) {
-                                if (Indexer_GetIndexByCoordinate(x,y,handle->Indexer,&p_neighbor)){
+                                if (Indexer_GetIndexByCoordinate(1,x,y,handle->Indexer,&p_neighbor)){
                                     p_index->neighbors[ring[j]]     = (void*)p_neighbor;
                                     p_neighbor->neighbors[ring_inv[j]] = (void*)p_index;
                                     int ind;
@@ -1028,14 +1068,14 @@ static void FindNeighborsN2Level(MeshHandle_t handle, char* buff){
                     int X = X0 + p_X[i];
                     int Y = Y0 + p_Y[i];
                     
-                    if (Indexer_GetIndexByCoordinate(X,Y,handle->Indexer,&p_index)){
+                    if (Indexer_GetIndexByCoordinate(1,X,Y,handle->Indexer,&p_index)){
                         for (int j = 0; j < 4; ++j){
                             int b_X = 2*X + p_X[j];
                             int b_Y = 2*Y + p_Y[j];
                             int x = X + p_X[j];
                             int y = Y + p_Y[j];
                             if (p_index->neighbors[j] == NULL) {
-                                if (Indexer_GetIndexByCoordinate(x,y,handle->Indexer,&p_neighbor)){
+                                if (Indexer_GetIndexByCoordinate(1,x,y,handle->Indexer,&p_neighbor)){
                                     p_index->neighbors[ring[j]]     = (void*)p_neighbor;
                                     p_neighbor->neighbors[ring_inv[j]] = (void*)p_index;
                                     int ind;
@@ -1055,7 +1095,6 @@ static void FindNeighborsN2Level(MeshHandle_t handle, char* buff){
             }
         }
     }
-
 }
 
 static void FindNeighborsN3Level(MeshHandle_t handle, char* buff){
@@ -1077,15 +1116,14 @@ static void FindNeighborsN3Level(MeshHandle_t handle, char* buff){
         int X = X0 + p_X[i];
         int Y = Y0 + p_Y[i];
         
-        if (Indexer_GetIndexByCoordinate(X,Y,handle->Indexer,&p_index)){
+        if (Indexer_GetIndexByCoordinate(1,X,Y,handle->Indexer,&p_index)){
             for (int j = 0; j < 4; ++j){
                 int b_X = 2*X + p_X[j];
                 int b_Y = 2*Y + p_Y[j];
                 int x = X + p_X[j];
                 int y = Y + p_Y[j];
-                printf("(%i,%i)\n",X,Y);
                 if (p_index->neighbors[j] == NULL) {
-                    if (Indexer_GetIndexByCoordinate(x,y,handle->Indexer,&p_neighbor)){
+                    if (Indexer_GetIndexByCoordinate(1,x,y,handle->Indexer,&p_neighbor)){
                         p_index->neighbors[ring[j]]     = (void*)p_neighbor;
                         p_neighbor->neighbors[ring_inv[j]] = (void*)p_index;
                         int ind;
@@ -1137,6 +1175,10 @@ static void TransposeMesh(MeshHandle_t handle, char* buff){
     unsigned count = 0;
 
     for (int i = 0; i < LENGTH; ++i){
+        Indexer_SetCoordinateCache(i,-1);
+    }
+
+    for (int i = 0; i < LENGTH; ++i){
         if (buff[i] == '*'){
             p_index[count++] = (handle->Indexer[i]);
             p_data[count-1]  = *((DataHandle_t)(handle->Indexer[i].data_ptr));
@@ -1145,10 +1187,13 @@ static void TransposeMesh(MeshHandle_t handle, char* buff){
             p_index[count-1].neighbors[1] = NULL;
             p_index[count-1].neighbors[2] = NULL;
             p_index[count-1].neighbors[3] = NULL;
-
+            int ind = handle->Indexer[i].coordinate[0] + (handle->Indexer[i].coordinate[1] * 17);
+            Indexer_SetCoordinateCache(count-1,ind);
         } 
     }
 
+    int p_value = 0;
+    int p_count = 0;
     free(handle->Indexer);
     free(handle->DataField);
     handle->Indexer = realloc(p_index,(count)*sizeof(*p_index));  

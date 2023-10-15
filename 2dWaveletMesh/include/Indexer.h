@@ -34,11 +34,15 @@ bool Indexer_GetNeighbor(IndexHandle_t* ret_handle, IndexHandle_t handle, int lo
 
 bool Indexer_SetNeighbor(int loc, int x, int y, IndexHandle_t handle, IndexHandle_t index);
 
+void Indexer_SetCoordinateCache(int CacheIndex,int varIndex);
+
+void Indexer_GetCoordinateCache(int CacheIndex,int* p_varIndex);
+
 bool Indexer_GetCoordinates(int* x, int* y, IndexHandle_t handle, int index);
 
-bool priv_CoordinateSearch(int x, int y, IndexHandle_t p_handle, IndexHandle_t* p_found_handle);
-
-bool Indexer_GetIndexByCoordinate(int x, int y, IndexHandle_t handle, IndexHandle_t* found_handle);
+static bool priv_CoordinateSearch(bool b_useCache, int x, int y, IndexHandle_t p_handle, IndexHandle_t* p_found_handle);
 
 bool Indexer_GetDataByCoordinate(int x, int y, IndexHandle_t handle, DataHandle_t* data);
+
+bool Indexer_GetIndexByCoordinate(bool b_useCache,int x, int y, IndexHandle_t handle, IndexHandle_t* found_handle);
 
