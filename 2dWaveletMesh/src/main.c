@@ -6,7 +6,7 @@
 int main()
 {
     MeshHandle_t Mesh;
-    char* buff = malloc(LENGTH * sizeof(*buff));
+
 
     clock_t begin = clock();
 
