@@ -48,6 +48,8 @@ bool N1LevelIsEmpty(int x, int y, MeshHandle_t handle);
 
 bool N2LevelIsEmpty(int x, int y, MeshHandle_t handle);
 
+bool N3LevelIsEmpty(int x, int y, MeshHandle_t handle);
+
 // private functions
 static void MarchingCrossTypeZero(MeshHandle_t handle, char* buff);
 
@@ -72,6 +74,10 @@ static void PrintNeighborBuffer(char* buff);
 static void FindNeighborsZeroLevel(MeshHandle_t handle, char* buff);
 
 static void FindNeighborsN1Level(MeshHandle_t handle, char* buff);
+
+static void FindNeighborsN2Level(MeshHandle_t handle, char* buff);
+
+static void FindNeighborsN3Level(MeshHandle_t handle, char* buff);
 
 // Grid Logic
 static void KeepZoneN2Level(int x, int y, MeshHandle_t handle);
