@@ -1,6 +1,12 @@
 # Cimplicity
 Marching Cross Algorithm - (2dWaveletMesh)
 
+TODO: speed up neighbor search. Currently uses brute force search, many ways to improve. 
+
+Idea 1: give the search function an initial index as a guess, neigbors are lilkely not too far from each other. 
+
+Idea 2: cache coordinate / index locations in a const array for fast repeated query. 
+
 
 The purpose of this algorithm is to adapt simulation meshes for problems with sparse fractal data. It would be very poor for evaluating harmonic functions with regularly spaced data structures.
 
