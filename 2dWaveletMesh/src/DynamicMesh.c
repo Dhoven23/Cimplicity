@@ -264,8 +264,7 @@ bool GenerateMesh(MeshHandle_t handle){
         handle->N3Level   = 1u;
         handle->length = LENGTH;
 
-        for (int i = 0; i < LENGTH; ++i)
-        {
+        for (int i = 0; i < LENGTH; ++i){
             handle->Indexer[i].data_ptr = (void*)(&(handle->DataField[i]));
         }
         return true;
