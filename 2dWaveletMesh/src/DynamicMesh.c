@@ -185,7 +185,7 @@
            * x *
 
     This method not only reduces the number of calculations dramatically 
-    for large grids where N^2 >> 2N, but it also guarantews much more predictable behavior 
+    for large grids where N^2 >> 2N, but it also guarantees much more predictable behavior 
     (we have directionality for our algorithm).
 
     One more step however is required to avoid the 'disputed node' problem. for a grid 
@@ -241,6 +241,8 @@ static void N2LevelSetInterPoints(MeshHandle_t handle);
 
 static void N3LevelSetInterPoints(MeshHandle_t handle);
 
+static void ResetBoundaries(MeshHandle_t handle);
+
 // Grid Logic
 static void KeepZoneN2Level(int x, int y, MeshHandle_t handle);
 
@@ -263,7 +265,7 @@ bool GenerateMesh(MeshHandle_t handle){
 
     if (Indexer_Create(&(handle->Indexer),LENGTH) && InitData(&(handle->DataField),LENGTH)){
         PopulateData(handle->DataField,LENGTH);
-        SmoothData2D(handle->DataField,LENGTH,10);
+        SmoothData2D(handle->DataField,LENGTH,20);
 
         // set bitfields
         handle->ZeroLevel = UINT64_MAX;
@@ -959,12 +961,75 @@ static void ResetNeighbors(MeshHandle_t handle){
     FindNeighborsN3Level(handle,buff);
     ZeroLevelSetInterPoints(handle);
     N1LevelSetInterPoints(handle);
+    N2LevelSetInterPoints(handle);
+    N3LevelSetInterPoints(handle);
+
+    ResetBoundaries(handle);
 
     printf("\n\n-----N3 Level-------\n\n");
     PrintNeighborBuffer(buff);
     printf("\n");
 
     free(buff);
+}
+
+static void ResetBoundaries(MeshHandle_t handle){
+    int length = handle->length;
+
+    IndexHandle_t p_neighbor;
+    DataHandle_t p_data;
+
+
+
+    float b[4] = {0.0f, 0.0f, 0.0f, 0.0f};
+
+    int X,Y; // node coordinates
+
+    int P0_x, P0_y; // neighbor buffer
+
+    for (int i = 0; i < length; i++){
+        if (!handle->Indexer[i].b_IsInterp){
+
+            Indexer_GetCoordinates(&X,&Y,handle->Indexer,i);
+            if (!GetData(handle->Indexer[i].data_ptr,&p_data)) {
+                printf("Data not found\n");
+            }
+            
+
+            for (int j = 0; j < 4; j++){
+                if (Indexer_GetNeighbor(&p_neighbor,&handle->Indexer[i],j)) {
+                    Indexer_GetCoordinates(&P0_x,&P0_y,p_neighbor,0);
+
+                    if ((j % 2) == 0){
+                        if (p_neighbor->b_IsInterp){
+                            b[j] = X + fabs((float)X - (float)P0_x);
+                        } else {
+                            b[j] = X + fabs((float)X - (float)P0_x)/2.0f;
+                        }
+                    } else {
+                        if (p_neighbor->b_IsInterp){
+                            b[j] = Y + fabs((float)Y - (float)P0_y);
+                        } else {
+                            b[j] = Y + fabs((float)Y - (float)P0_y)/2.0f;
+                        }
+                    }
+                } else {
+                    if (j == 0) {
+                        b[j] = 16.5f;
+                    } else if (j == 1) {
+                        b[j] = -0.5f;
+                    } else if (j == 2) {
+                        b[j] = -0.5f;
+                    } else if (j == 3) {
+                        b[j] = 16.5f;
+                    } else {
+                        b[j] = 0.0f;
+                    }
+                }
+            }
+            setBounds(p_data,b[0],b[1],b[2],b[3]);
+        }
+    }
 }
 
 static void FindNeighborsZeroLevel(MeshHandle_t handle, char* buff){
@@ -1278,7 +1343,7 @@ static void TransposeMesh(MeshHandle_t handle, char* buff){
     free(handle->DataField);
     handle->Indexer = realloc(p_index,(count)*sizeof(*p_index));  
     handle->DataField = realloc(p_data,(count)*sizeof(*p_data));
-    handle->length = count+1;
+    handle->length = count;
 
 }
 

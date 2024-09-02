@@ -33,6 +33,10 @@ bool PopulateData(DataHandle_t handle, unsigned length){
     if (handle != NULL){
         for (int i = 0; i < length; ++i){
             handle[i].data = .15*((double)rand() / (double)RAND_MAX);
+            handle[i].boundary[0] = 0.0f;
+            handle[i].boundary[1] = 0.0f;
+            handle[i].boundary[2] = 0.0f;
+            handle[i].boundary[3] = 0.0f;
         }
         handle[0].data = 0;
         return true;
@@ -75,6 +79,28 @@ int GetIndex(int X, int Y){
 bool GetData(void* data,DataHandle_t* p_data){
     if ((data != NULL) && (p_data != NULL)){
         *p_data = (DataHandle_t)(data);
+        return true;
+    }
+    return false;
+}
+
+bool getBounds(float* bounds, DataHandle_t p_data){
+    if((bounds != NULL) && (p_data != NULL)){
+        for(int i = 0; i < 4; i++){
+            *(bounds+i) = p_data->boundary[i];
+        }
+        return true;
+    }
+    return false;
+}
+
+bool setBounds(DataHandle_t handle, float b0, float b1, float b2, float b3){
+    if (handle != NULL){
+        handle->boundary[0] = b0;
+        handle->boundary[1] = b1;
+        handle->boundary[2] = b2;
+        handle->boundary[3] = b3;
+
         return true;
     }
     return false;

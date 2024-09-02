@@ -28,6 +28,10 @@ bool GenerateMesh(MeshHandle_t handle);
 
 void DestroyMesh(MeshHandle_t handle);
 
+void GetGridLines(MeshHandle_t handle, int* numVertices, int* numIndices, float* vertices, int* indices);
+
+void getGridTriangles(MeshHandle_t handle, int* numVertices, int* numIndices, float* vertices, int* indices);
+
 void SetMeshThreshold(double p_threshold, MeshHandle_t handle);
 
 void getMeshThreshold(double* p_threshold, MeshHandle_t handle);

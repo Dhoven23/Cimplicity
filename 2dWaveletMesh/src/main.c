@@ -20,13 +20,13 @@ int main()
         
     	AdaptMesh(Mesh);
 
-        DM_printIndex(Mesh);
+        //DM_printIndex(Mesh);
 
-        for (int i = 0; i < 8; ++i){
-            for (int j = 0; j < 8; ++j){
-                printf(" %i ",(int)ZeroLevelIsEmpty(j,i,Mesh));
-            } printf("\n");
-        }
+        // for (int i = 0; i < 8; ++i){
+        //     for (int j = 0; j < 8; ++j){
+        //         printf(" %i ",(int)ZeroLevelIsEmpty(j,i,Mesh));
+        //     } printf("\n");
+        // }
         // printf("\n");
         // for (int i = 0; i < 4; ++i){
         //     for (int j = 0; j < 4; ++j){

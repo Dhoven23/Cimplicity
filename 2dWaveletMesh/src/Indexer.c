@@ -72,7 +72,7 @@ bool Indexer_GetNeighbor(IndexHandle_t* ret_handle, IndexHandle_t handle, int lo
 	
 		if (p_handle != NULL){
 			*ret_handle = p_handle;
-			printf("Neightbor Coords: (%i,%i)\n",p_handle->coordinate[0],p_handle->coordinate[1]);
+			//printf("Neighbor Coords: (%i,%i)\n",p_handle->coordinate[0],p_handle->coordinate[1]);
 			return true;
 		} else {
 			return false;
