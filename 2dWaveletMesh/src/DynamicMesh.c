@@ -233,6 +233,14 @@ static void FindNeighborsN2Level(MeshHandle_t handle, char* buff);
 
 static void FindNeighborsN3Level(MeshHandle_t handle, char* buff);
 
+static void ZeroLevelSetInterPoints(MeshHandle_t handle);
+
+static void N1LevelSetInterPoints(MeshHandle_t handle);
+
+static void N2LevelSetInterPoints(MeshHandle_t handle);
+
+static void N3LevelSetInterPoints(MeshHandle_t handle);
+
 // Grid Logic
 static void KeepZoneN2Level(int x, int y, MeshHandle_t handle);
 
@@ -949,6 +957,9 @@ static void ResetNeighbors(MeshHandle_t handle){
     FindNeighborsN1Level(handle,buff);
     FindNeighborsN2Level(handle,buff);
     FindNeighborsN3Level(handle,buff);
+    ZeroLevelSetInterPoints(handle);
+    N1LevelSetInterPoints(handle);
+
     printf("\n\n-----N3 Level-------\n\n");
     PrintNeighborBuffer(buff);
     printf("\n");
@@ -1150,6 +1161,67 @@ static void FindNeighborsN3Level(MeshHandle_t handle, char* buff){
     }  
 }
 
+static void ZeroLevelSetInterPoints(MeshHandle_t handle){
+
+    IndexHandle_t p_index;
+
+    for(int i = 0; i < 8; i++){
+        for (int j = 0; j < 8; j++)
+        {
+            int X = (j * 2) + 1;
+            int Y = (i * 2) + 1;
+            if (ZeroLevelIsEmpty(j,i,handle)){
+                Indexer_GetIndexByCoordinate(1,X,Y,handle->Indexer,&p_index);
+                Indexer_SetInterpTrue(p_index);
+            }
+        }
+    }
+}
+
+static void N1LevelSetInterPoints(MeshHandle_t handle){
+
+    IndexHandle_t p_index;
+
+    for(int i = 0; i < 4; i++){
+        for (int j = 0; j < 4; j++)
+        {
+            int X = (j * 4) + 2;
+            int Y = (i * 4) + 2;
+            if (N1LevelIsEmpty(j,i,handle)){
+                Indexer_GetIndexByCoordinate(1,X,Y,handle->Indexer,&p_index);
+                Indexer_SetInterpTrue(p_index);
+            }
+        }
+    }
+}
+
+static void N2LevelSetInterPoints(MeshHandle_t handle){
+
+    IndexHandle_t p_index;
+
+    for(int i = 0; i < 2; i++){
+        for (int j = 0; j < 2; j++)
+        {
+            int X = (j * 8) + 4;
+            int Y = (i * 8) + 4;
+            if (N2LevelIsEmpty(j,i,handle)){
+                Indexer_GetIndexByCoordinate(1,X,Y,handle->Indexer,&p_index);
+                Indexer_SetInterpTrue(p_index);
+            }
+        }
+    }
+}
+
+static void N3LevelSetInterPoints(MeshHandle_t handle){
+
+    IndexHandle_t p_index;
+
+    if (N3LevelIsEmpty(0,0,handle)){
+        Indexer_GetIndexByCoordinate(1,8,8,handle->Indexer,&p_index);
+        Indexer_SetInterpTrue(p_index);
+    }
+}
+
 
 
 static bool NeighborBufferIndex(int x,int y, int* ind){
@@ -1209,6 +1281,8 @@ static void TransposeMesh(MeshHandle_t handle, char* buff){
     handle->length = count+1;
 
 }
+
+
 
 
 /*/-------------------------------------------------------

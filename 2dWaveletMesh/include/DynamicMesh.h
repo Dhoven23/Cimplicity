@@ -1,7 +1,7 @@
 #include <GridData.h>
 #include <Indexer.h>
 
-#define DM_printIndex(handle,length) Indexer_Print(handle,length)
+#define DM_printIndex(handle) Indexer_Print(handle->Indexer,handle->length-1)
 
 // Private Data type
 struct priv_MeshHandle{

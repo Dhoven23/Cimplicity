@@ -34,6 +34,10 @@ bool Indexer_GetNeighbor(IndexHandle_t* ret_handle, IndexHandle_t handle, int lo
 
 bool Indexer_SetNeighbor(int loc, int x, int y, IndexHandle_t handle, IndexHandle_t index);
 
+bool Indexer_SetInterpTrue(IndexHandle_t handle);
+
+bool Indexer_SetInterpFalse(IndexHandle_t handle);
+
 void Indexer_SetCoordinateCache(int CacheIndex,int varIndex);
 
 void Indexer_GetCoordinateCache(int CacheIndex,int* p_varIndex);

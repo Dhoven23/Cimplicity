@@ -48,6 +48,22 @@ void Indexer_GetCoordinateCache(int CacheIndex,int* p_varIndex){
 	*p_varIndex = Coords[CacheIndex];
 }
 
+bool Indexer_SetInterpTrue(IndexHandle_t handle){
+	if (handle != NULL){
+		handle->b_IsInterp = true;
+		return true;
+	}
+	return false;
+}
+
+bool Indexer_SetInterpFalse(IndexHandle_t handle){
+	if (handle != NULL){
+		handle->b_IsInterp = false;
+		return true;
+	}
+	return false;
+}
+
 // Lookup neighbor
 bool Indexer_GetNeighbor(IndexHandle_t* ret_handle, IndexHandle_t handle, int loc){
 	if ((loc < 4)){
@@ -69,7 +85,7 @@ bool Indexer_GetNeighbor(IndexHandle_t* ret_handle, IndexHandle_t handle, int lo
 bool Indexer_SetNeighbor(int loc, int x, int y, IndexHandle_t handle, IndexHandle_t index){
 	if ((loc < 4) && (loc > -1)){
 		IndexHandle_t p_handle;
-		if (Indexer_GetIndexByCoordinate(1,x, y, index, &p_handle)){
+		if (Indexer_GetIndexByCoordinate(1, x, y, index, &p_handle)){
 			handle->neighbors[loc] = p_handle;
 			return true;
 		}
@@ -102,7 +118,11 @@ bool Indexer_Destroy(IndexHandle_t handle){
 void Indexer_Print(IndexHandle_t handle, unsigned length){
 	for (int i = 0; i < length; ++i)
 	{
-		printf("%i: Index[%i][%i]\n",i, (handle+i)->coordinate[0], (handle+i)->coordinate[1]);
+		printf("%i: Index[%i][%i] -> %i \n",i, 
+			(handle+i)->coordinate[0], 
+			(handle+i)->coordinate[1],
+			(int)(handle+i)->b_IsInterp
+			);
 
 	}
 }
