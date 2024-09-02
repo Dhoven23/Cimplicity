@@ -1000,17 +1000,40 @@ static void ResetBoundaries(MeshHandle_t handle){
                 if (Indexer_GetNeighbor(&p_neighbor,&handle->Indexer[i],j)) {
                     Indexer_GetCoordinates(&P0_x,&P0_y,p_neighbor,0);
 
-                    if ((j % 2) == 0){
-                        if (p_neighbor->b_IsInterp){
-                            b[j] = X + fabs((float)X - (float)P0_x);
-                        } else {
-                            b[j] = X + fabs((float)X - (float)P0_x)/2.0f;
+                    if (p_neighbor->b_IsInterp){
+                        switch (j){
+                            case 0:
+                                b[j] = P0_x;
+                                break;
+                            case 1:
+                                b[j] = P0_y;
+                                break;
+                            case 2:
+                                b[j] = P0_x;
+                                break;
+                            case 3:
+                                b[j] = P0_y;
+                                break;
+                            default:
+                                b[j] = 0.0f;
                         }
+
                     } else {
-                        if (p_neighbor->b_IsInterp){
-                            b[j] = Y + fabs((float)Y - (float)P0_y);
-                        } else {
-                            b[j] = Y + fabs((float)Y - (float)P0_y)/2.0f;
+                        switch (j){
+                            case 0:
+                                b[j] = X + fabs((float)X - (float)P0_x)/2.0f;
+                                break;
+                            case 1:
+                                b[j] = Y - fabs((float)Y - (float)P0_y)/2.0f;
+                                break;
+                            case 2:
+                                b[j] = X - fabs((float)X - (float)P0_x)/2.0f;
+                                break;
+                            case 3:
+                                b[j] = Y + fabs((float)Y - (float)P0_y)/2.0f;
+                                break;
+                            default:
+                                b[j] = 0.0f;
                         }
                     }
                 } else {
