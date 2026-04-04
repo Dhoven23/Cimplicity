@@ -243,6 +243,8 @@ static void N3LevelSetInterPoints(MeshHandle_t handle);
 
 static void ResetBoundaries(MeshHandle_t handle);
 
+static void LinkTileBorders(MeshHandle_t handle, int dir, MeshHandle_t neighbor);
+
 // Grid Logic
 static void KeepZoneN2Level(int x, int y, MeshHandle_t handle);
 
@@ -274,6 +276,11 @@ bool GenerateMesh(MeshHandle_t handle){
         handle->N3Level   = 1u;
         handle->length = LENGTH;
 
+        // tiling: no adjacent tiles by default, origin at (0,0)
+        for (int t = 0; t < 4; ++t) handle->tile_neighbors[t] = NULL;
+        handle->tile_origin[0] = 0;
+        handle->tile_origin[1] = 0;
+
         for (int i = 0; i < LENGTH; ++i){
             handle->Indexer[i].data_ptr = (void*)(&(handle->DataField[i]));
         }
@@ -300,7 +307,17 @@ void AdaptMesh(MeshHandle_t handle){
     char* buff = malloc(LENGTH * sizeof *buff);
     RefineMesh(handle, buff);
     TransposeMesh(handle, buff);
+    free(buff);
     ResetNeighbors(handle);
+
+    // Restore cross-tile border connections that TransposeMesh cleared.
+    // Do this before ResetBoundaries so boundary coords use the correct neighbors.
+    for (int d = 0; d < 4; ++d){
+        if (handle->tile_neighbors[d] != NULL){
+            LinkTileBorders(handle, d, handle->tile_neighbors[d]);
+        }
+    }
+    ResetBoundaries(handle);
 }
 
 bool GetScalarByCoordinate(int x, int y, MeshHandle_t handle, double* data){
@@ -964,8 +981,6 @@ static void ResetNeighbors(MeshHandle_t handle){
     N2LevelSetInterPoints(handle);
     N3LevelSetInterPoints(handle);
 
-    ResetBoundaries(handle);
-
     printf("\n\n-----N3 Level-------\n\n");
     PrintNeighborBuffer(buff);
     printf("\n");
@@ -979,74 +994,71 @@ static void ResetBoundaries(MeshHandle_t handle){
     IndexHandle_t p_neighbor;
     DataHandle_t p_data;
 
-
-
     float b[4] = {0.0f, 0.0f, 0.0f, 0.0f};
 
-    int X,Y; // node coordinates
+    int X,Y;    // this node's local coordinates
+    int P0_x, P0_y; // neighbor's local coordinates
 
-    int P0_x, P0_y; // neighbor buffer
+    // Tile-direction offsets (in node-space): right, up, left, down
+    // These translate a neighbor tile's local coords into this tile's global frame.
+    static const int tile_off[4][2] = {{16,0},{0,-16},{-16,0},{0,16}};
 
     for (int i = 0; i < length; i++){
         if (!handle->Indexer[i].b_IsInterp){
 
             Indexer_GetCoordinates(&X,&Y,handle->Indexer,i);
-            if (!GetData(handle->Indexer[i].data_ptr,&p_data)) {
+            if (!GetData(handle->Indexer[i].data_ptr,&p_data)){
                 printf("Data not found\n");
             }
-            
 
             for (int j = 0; j < 4; j++){
-                if (Indexer_GetNeighbor(&p_neighbor,&handle->Indexer[i],j)) {
+                if (Indexer_GetNeighbor(&p_neighbor,&handle->Indexer[i],j)){
                     Indexer_GetCoordinates(&P0_x,&P0_y,p_neighbor,0);
+
+                    // Determine if this neighbor lives in an adjacent tile and, if so,
+                    // what coordinate offset to apply to bring it into this tile's frame.
+                    int off_x = 0, off_y = 0;
+                    for (int d = 0; d < 4; ++d){
+                        MeshHandle_t nt = handle->tile_neighbors[d];
+                        if (nt && p_neighbor >= nt->Indexer &&
+                                  p_neighbor <  nt->Indexer + (int)nt->length){
+                            off_x = tile_off[d][0];
+                            off_y = tile_off[d][1];
+                            break;
+                        }
+                    }
+
+                    // Neighbor's position in this tile's global coordinate frame
+                    float gP0_x = (float)(P0_x + off_x);
+                    float gP0_y = (float)(P0_y + off_y);
 
                     if (p_neighbor->b_IsInterp){
                         switch (j){
-                            case 0:
-                                b[j] = P0_x;
-                                break;
-                            case 1:
-                                b[j] = P0_y;
-                                break;
-                            case 2:
-                                b[j] = P0_x;
-                                break;
-                            case 3:
-                                b[j] = P0_y;
-                                break;
-                            default:
-                                b[j] = 0.0f;
+                            case 0: b[j] = gP0_x; break;
+                            case 1: b[j] = gP0_y; break;
+                            case 2: b[j] = gP0_x; break;
+                            case 3: b[j] = gP0_y; break;
+                            default: b[j] = 0.0f;
                         }
-
                     } else {
                         switch (j){
-                            case 0:
-                                b[j] = X + fabs((float)X - (float)P0_x)/2.0f;
-                                break;
-                            case 1:
-                                b[j] = Y - fabs((float)Y - (float)P0_y)/2.0f;
-                                break;
-                            case 2:
-                                b[j] = X - fabs((float)X - (float)P0_x)/2.0f;
-                                break;
-                            case 3:
-                                b[j] = Y + fabs((float)Y - (float)P0_y)/2.0f;
-                                break;
-                            default:
-                                b[j] = 0.0f;
+                            case 0: b[j] = (float)X + fabsf((float)X - gP0_x)/2.0f; break;
+                            case 1: b[j] = (float)Y - fabsf((float)Y - gP0_y)/2.0f; break;
+                            case 2: b[j] = (float)X - fabsf((float)X - gP0_x)/2.0f; break;
+                            case 3: b[j] = (float)Y + fabsf((float)Y - gP0_y)/2.0f; break;
+                            default: b[j] = 0.0f;
                         }
                     }
                 } else {
-                    if (j == 0) {
-                        b[j] = 16.5f;
-                    } else if (j == 1) {
-                        b[j] = -0.5f;
-                    } else if (j == 2) {
-                        b[j] = -0.5f;
-                    } else if (j == 3) {
-                        b[j] = 16.5f;
-                    } else {
-                        b[j] = 0.0f;
+                    // No neighbor in this direction.
+                    // If a tile is connected there, the seam is at the shared border coordinate;
+                    // otherwise it is the outer domain edge (±0.5 beyond the last node).
+                    switch (j){
+                        case 0: b[j] = (handle->tile_neighbors[0]) ? 16.0f : 16.5f; break;
+                        case 1: b[j] = (handle->tile_neighbors[1]) ?  0.0f : -0.5f; break;
+                        case 2: b[j] = (handle->tile_neighbors[2]) ?  0.0f : -0.5f; break;
+                        case 3: b[j] = (handle->tile_neighbors[3]) ? 16.0f : 16.5f; break;
+                        default: b[j] = 0.0f;
                     }
                 }
             }
@@ -1371,6 +1383,91 @@ static void TransposeMesh(MeshHandle_t handle, char* buff){
 }
 
 
+
+
+/*/-------------------------------------------------------
+    TILING SUPPORT
+/ /---------------------------------------------------- */
+
+/*  LinkTileBorders - internal helper called by AdaptMesh and Mesh_ConnectTile.
+ *
+ *  Walks every node in `handle` that sits on the shared border (determined by
+ *  `dir`) and, for each one, looks up the corresponding node in `neighbor`
+ *  (using the neighbor's own coordinate cache).  When a match is found both
+ *  sides' neighbor pointers are wired up bidirectionally so that
+ *  Indexer_GetNeighbor() works transparently across the tile seam.
+ *
+ *  dir convention:  0 = right (+x),  1 = up (-y),  2 = left (-x),  3 = down (+y)
+ *
+ *  Border layout for a 17-node (0..16) tile:
+ *    dir 0 (right) : handle nodes with x==16  <->  neighbor nodes with x==0
+ *    dir 1 (up)    : handle nodes with y==0   <->  neighbor nodes with y==16
+ *    dir 2 (left)  : handle nodes with x==0   <->  neighbor nodes with x==16
+ *    dir 3 (down)  : handle nodes with y==16  <->  neighbor nodes with y==0
+ */
+static void LinkTileBorders(MeshHandle_t handle, int dir, MeshHandle_t neighbor){
+    if (!handle || !neighbor || dir < 0 || dir > 3) return;
+
+    int inv_dir = (dir + 2) % 4;
+
+    /* For each direction: which local axis is fixed and what value is it,
+     * and what value does the matching node have on the neighbor side? */
+    /* fixed_axis: 0 = x is fixed,  1 = y is fixed */
+    int fixed_axis, h_fixed, n_fixed;
+    switch (dir){
+        case 0: fixed_axis = 0; h_fixed = 16; n_fixed =  0; break; /* right */
+        case 1: fixed_axis = 1; h_fixed =  0; n_fixed = 16; break; /* up    */
+        case 2: fixed_axis = 0; h_fixed =  0; n_fixed = 16; break; /* left  */
+        case 3: fixed_axis = 1; h_fixed = 16; n_fixed =  0; break; /* down  */
+        default: return;
+    }
+
+    for (int i = 0; i < (int)handle->length; ++i){
+        int X = handle->Indexer[i].coordinate[0];
+        int Y = handle->Indexer[i].coordinate[1];
+
+        /* Skip nodes not on this tile's shared border */
+        if ((fixed_axis == 0 && X != h_fixed) ||
+            (fixed_axis == 1 && Y != h_fixed)) continue;
+
+        /* The varying coordinate is the same in both tiles */
+        int scan = (fixed_axis == 0) ? Y : X;
+
+        int nx = (fixed_axis == 0) ? n_fixed : scan;
+        int ny = (fixed_axis == 0) ? scan    : n_fixed;
+
+        IndexHandle_t p_nbr;
+        if (Indexer_GetIndexByCoordinate(1, nx, ny, neighbor->Indexer, &p_nbr)){
+            handle->Indexer[i].neighbors[dir] = (void*)p_nbr;
+            p_nbr->neighbors[inv_dir]         = (void*)(&handle->Indexer[i]);
+        }
+    }
+}
+
+/* Public API ------------------------------------------------------------ */
+
+bool Mesh_ConnectTile(MeshHandle_t handle, int direction, MeshHandle_t neighbor){
+    if (!handle || !neighbor || direction < 0 || direction > 3) return false;
+
+    int inv_dir = (direction + 2) % 4;
+
+    /* Record the tile references so AdaptMesh can restore the links after
+     * each adaptation cycle. */
+    handle->tile_neighbors[direction] = neighbor;
+    neighbor->tile_neighbors[inv_dir] = handle;
+
+    /* Set this tile's global origin relative to the neighbor.
+     * tile_origin is in node-space (units of 1 grid node).
+     * The two tiles share one border row/column, so the step is 16 nodes. */
+    static const int step[4][2] = {{16,0},{0,-16},{-16,0},{0,16}};
+    neighbor->tile_origin[0] = handle->tile_origin[0] + step[direction][0];
+    neighbor->tile_origin[1] = handle->tile_origin[1] + step[direction][1];
+
+    /* Wire the border IndexNode pointers right now */
+    LinkTileBorders(handle, direction, neighbor);
+
+    return true;
+}
 
 
 /*/-------------------------------------------------------

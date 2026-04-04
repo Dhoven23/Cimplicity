@@ -13,6 +13,10 @@ struct priv_MeshHandle{
 	uint8_t  N3Level : 1;
 	double threshold;
 	unsigned length;
+	// Tiling support: adjacent tile handles [right=0, up=1, left=2, down=3]
+	// and this tile's origin in global node-space coordinates.
+	struct priv_MeshHandle* tile_neighbors[4];
+	int tile_origin[2];
 };
 
 // Public data type
@@ -55,4 +59,10 @@ bool N1LevelIsEmpty(int x, int y, MeshHandle_t handle);
 bool N2LevelIsEmpty(int x, int y, MeshHandle_t handle);
 
 bool N3LevelIsEmpty(int x, int y, MeshHandle_t handle);
+
+// Tiling: register an adjacent tile in direction dir (0=right,1=up,2=left,3=down).
+// Wires the shared border IndexNode neighbor pointers bidirectionally so that nodes
+// at tile seams see their cross-tile neighbors after AdaptMesh().
+// Call after both tiles have been adapted, and again whenever either is re-adapted.
+bool Mesh_ConnectTile(MeshHandle_t handle, int direction, MeshHandle_t neighbor);
 

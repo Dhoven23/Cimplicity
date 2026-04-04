@@ -5,8 +5,12 @@
 
 int main()
 {
-    MeshHandle_t Mesh;
-
+    // MeshHandle_t is a pointer type; allocate the backing struct first.
+    MeshHandle_t Mesh = malloc(sizeof(*Mesh));
+    if (Mesh == NULL){
+        fprintf(stderr, "ERROR, malloc failed\n");
+        return 1;
+    }
 
     clock_t begin = clock();
 
@@ -15,9 +19,9 @@ int main()
 
 
     	// Put your program Here ...
-    	
+
     	SetMeshThreshold(0.1f,Mesh);
-        
+
     	AdaptMesh(Mesh);
 
         //DM_printIndex(Mesh);
@@ -40,6 +44,8 @@ int main()
 
     	fprintf(stderr, "ERROR, mesh not generated\n");
     }
+
+    free(Mesh);
 
     clock_t end = clock();
 
